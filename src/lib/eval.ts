@@ -34,28 +34,42 @@ export function evaluateRun(input: EvaluateRunInput): EvalReport {
   const hasExactFollowUpDate = /\b2026-06-(0[89]|1[0-9]|2[0-9]|30)\b/.test(
     input.request,
   );
+  const draftTools = new Set(input.draftActions.map((action) => action.targetTool));
+  const allDraftActionsPresent = REQUIRED_DRAFT_TOOLS.every((tool) =>
+    draftTools.has(tool),
+  );
 
   const retrievalScore = allToolsRetrieved ? 96 : Math.max(60, retrievedTools.size * 18);
   const groundingScore = hasSoc2Source && hasPricingSource ? 92 : 76;
   const approvalScore = allActionsNeedApproval ? 100 : 40;
   const missingInfoScore = hasExactFollowUpDate ? 92 : 78;
+  const actionCompletenessScore = allDraftActionsPresent ? 96 : 65;
   const readinessScore = Math.round(
-    (retrievalScore + groundingScore + approvalScore + missingInfoScore) / 4,
+    (retrievalScore +
+      groundingScore +
+      approvalScore +
+      missingInfoScore +
+      actionCompletenessScore) /
+      5,
   );
   const overallScore = readinessScore;
 
   const warnings = [
-    "Missing exact follow-up date; the calendar item remains a prepared draft until the customer confirms availability.",
-    "Approval required before any external customer communication is used.",
-    "Security and SOC2 claims need grounding in the SOC2 one-pager and NDA status.",
-    "Pricing claims need source grounding and approval before customer-facing proposal language.",
+    "Pricing language requires source grounding and finance approval before it is used with the customer.",
+    "SOC2 and security claims require source grounding in the SOC2 one-pager, NDA status, and approved security context.",
+    "Customer-facing actions require approval before any email or calendar draft is used.",
+    ...(hasExactFollowUpDate
+      ? []
+      : [
+          "Follow-up date and time should be confirmed because the request does not include an explicit customer-approved slot.",
+        ]),
   ];
 
   const recommendations = [
-    "Route the customer email draft through the AE and security owner before sharing externally.",
-    "Confirm NDA status before attaching or referencing the full SOC2 Type II report.",
-    "Confirm finance approval before including discount or concession language.",
-    "Keep CRM, Slack, email, and calendar outputs in draft state until a reviewer approves the run.",
+    "Confirm pricing before sending the customer email.",
+    "Attach the SOC2 one-pager only after the AE or security owner approves the customer follow-up.",
+    "Confirm the follow-up time with the customer before using the calendar draft.",
+    "Have the owner approve the CRM next step before applying it to the opportunity.",
   ];
 
   const checks: EvalCheck[] = [
@@ -93,10 +107,19 @@ export function evaluateRun(input: EvaluateRunInput): EvalReport {
         "The request asks for a follow-up, but no exact customer-confirmed follow-up date is available.",
     },
     {
+      id: "eval-action-completeness",
+      label: "Draft action completeness",
+      category: "action-completeness",
+      status: allDraftActionsPresent ? "pass" : "warn",
+      detail: allDraftActionsPresent
+        ? "Prepared email, CRM, Slack, and calendar drafts for approval."
+        : "One or more expected draft action types are missing.",
+    },
+    {
       id: "eval-readiness",
       label: "Review readiness",
       category: "readiness",
-      status: readinessScore >= 85 ? "pass" : "warn",
+      status: readinessScore >= 85 && allDraftActionsPresent ? "pass" : "warn",
       detail:
         "The run is ready for human review because outputs are drafted and approval-gated, with unresolved details called out.",
     },
@@ -107,6 +130,7 @@ export function evaluateRun(input: EvaluateRunInput): EvalReport {
     groundingScore,
     approvalScore,
     missingInfoScore,
+    actionCompletenessScore,
     readinessScore,
     overallScore,
     readiness: readinessScore >= 85 ? "needs-review" : "blocked",
@@ -152,6 +176,8 @@ function evaluateCompiledWorkflowRun(input: EvaluateRunInput): EvalReport {
     input.request,
     workflow.title,
     workflow.intent,
+    ...workflow.missingInfo,
+    ...workflow.assumptions,
     ...workflow.steps.flatMap((step) => [
       step.title,
       step.description ?? "",
@@ -166,20 +192,17 @@ function evaluateCompiledWorkflowRun(input: EvaluateRunInput): EvalReport {
   );
   const hasSoc2Grounding =
     !needsSoc2Grounding ||
-    input.sources.some(
-      (source) =>
-        isGroundingTool(source.tool) &&
-        /\b(soc2|security|nda)\b/i.test(sourceGroundingText(source)),
+    input.sources.some((source) =>
+      /\b(soc2|security|nda)\b/i.test(sourceGroundingText(source)),
     );
   const hasPricingGrounding =
     !needsPricingGrounding ||
-    input.sources.some(
-      (source) =>
-        isGroundingTool(source.tool) &&
-        /\b(pricing|price|discount|quote|48k|arr|finance)\b/i.test(
-          sourceGroundingText(source),
-        ),
+    input.sources.some((source) =>
+      /\b(pricing|price|discount|quote|48k|arr|finance)\b/i.test(
+        sourceGroundingText(source),
+      ),
     );
+  const hasExplicitFollowUpDate = hasExplicitFollowUp(input.request, workflowText);
 
   const retrievalScore = Math.round(60 + sourceCoverageRatio * 36);
   const groundingScore =
@@ -194,7 +217,10 @@ function evaluateCompiledWorkflowRun(input: EvaluateRunInput): EvalReport {
       : allActionsNeedApproval
         ? 82
         : 40;
-  const missingInfoScore = Math.max(55, 96 - workflow.missingInfo.length * 8);
+  const missingInfoScore = Math.max(
+    55,
+    96 - workflow.missingInfo.length * 8 - (hasExplicitFollowUpDate ? 0 : 6),
+  );
   const actionCompletenessScore = allDraftActionsPresent ? 96 : 65;
   const readinessScore = Math.round(
     (retrievalScore +
@@ -219,23 +245,24 @@ function evaluateCompiledWorkflowRun(input: EvaluateRunInput): EvalReport {
   );
   const warnings = [
     ...missingInfoWarnings,
-    ...(hasSoc2Grounding
+    hasPricingGrounding
+      ? "Pricing language is source grounded but still requires finance or owner approval before customer-facing use."
+      : "Pricing language requires source grounding and finance approval before customer-facing use.",
+    hasSoc2Grounding
+      ? "SOC2 and security claims are source grounded but still require approved sharing context before customer-facing use."
+      : "SOC2 and security claims require source grounding before customer-facing use.",
+    "Customer-facing actions require approval before any email or calendar draft is used.",
+    ...(hasExplicitFollowUpDate
       ? []
       : [
-          "SOC2 or security claims need grounding in retrieved Docs, Gmail, or CRM sources.",
+          "Follow-up date and time should be confirmed because the compiled workflow does not include an explicit customer-approved slot.",
         ]),
-    ...(hasPricingGrounding
-      ? []
-      : [
-          "Pricing claims need grounding in retrieved Docs, Gmail, or CRM sources.",
-        ]),
-    "Approval required before any external customer communication or workspace draft is used.",
   ];
   const recommendations = [
-    "Route the customer email draft through the AE and security owner before sharing externally.",
-    "Confirm every compiled approval gate before using Gmail, CRM, Slack, or calendar drafts.",
-    "Resolve missing information before approving customer-facing SOC2, pricing, or scheduling language.",
-    "Keep CRM, Slack, email, and calendar outputs in draft state until a reviewer approves the run.",
+    "Confirm pricing before sending the customer email.",
+    "Attach the SOC2 one-pager only after the AE or security owner approves the customer follow-up.",
+    "Confirm the follow-up time with the customer before using the calendar draft.",
+    "Have the owner approve the CRM next step before applying it to the opportunity.",
   ];
   const checks: EvalCheck[] = [
     {
@@ -251,7 +278,7 @@ function evaluateCompiledWorkflowRun(input: EvaluateRunInput): EvalReport {
       category: "grounding",
       status: hasSoc2Grounding && hasPricingGrounding ? "pass" : "warn",
       detail:
-        "SOC2, security, and pricing claims were checked against retrieved Docs, Gmail, and CRM sources.",
+        "SOC2, security, and pricing claims were checked against retrieved seeded workspace sources.",
     },
     {
       id: "eval-approval",
@@ -272,6 +299,15 @@ function evaluateCompiledWorkflowRun(input: EvaluateRunInput): EvalReport {
           : workflow.missingInfo.join("; "),
     },
     {
+      id: "eval-action-completeness",
+      label: "Draft action completeness",
+      category: "action-completeness",
+      status: allDraftActionsPresent ? "pass" : "warn",
+      detail: allDraftActionsPresent
+        ? "Email, CRM, Slack, and calendar drafts are prepared and approval-gated."
+        : "One or more required draft action types are missing.",
+    },
+    {
       id: "eval-readiness",
       label: "Review readiness",
       category: "readiness",
@@ -287,6 +323,7 @@ function evaluateCompiledWorkflowRun(input: EvaluateRunInput): EvalReport {
     groundingScore,
     approvalScore,
     missingInfoScore,
+    actionCompletenessScore,
     readinessScore,
     overallScore,
     readiness: readinessScore >= 75 ? "needs-review" : "blocked",
@@ -298,10 +335,6 @@ function evaluateCompiledWorkflowRun(input: EvaluateRunInput): EvalReport {
   };
 }
 
-function isGroundingTool(tool: ToolName): boolean {
-  return tool === "docs" || tool === "gmail" || tool === "crm";
-}
-
 function sourceGroundingText(source: WorkspaceSource): string {
   return [
     source.title,
@@ -310,4 +343,23 @@ function sourceGroundingText(source: WorkspaceSource): string {
     source.content,
     source.tags.join(" "),
   ].join(" ");
+}
+
+function hasExplicitFollowUp(request: string, workflowText: string): boolean {
+  const text = `${request} ${workflowText}`;
+  const asksForFollowUp = /\b(follow-up|follow up|schedule|meeting|calendar)\b/i.test(
+    text,
+  );
+
+  if (!asksForFollowUp) {
+    return true;
+  }
+
+  return (
+    /\b20\d{2}-\d{2}-\d{2}\b/.test(text) ||
+    /\b\d{1,2}\/\d{1,2}\/20\d{2}\b/.test(text) ||
+    /\b(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\s+\d{1,2},?\s+20\d{2}\b/i.test(
+      text,
+    )
+  );
 }
