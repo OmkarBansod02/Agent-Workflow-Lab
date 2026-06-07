@@ -30,10 +30,11 @@ export async function POST(request: Request) {
   }
 
   try {
-    const compiledWorkflow = await compileWorkflow(workflowRequest);
+    const result = await compileWorkflow(workflowRequest);
 
-    return NextResponse.json({ compiledWorkflow });
-  } catch {
+    return NextResponse.json(result);
+  } catch (error) {
+    console.error("[compile] API route failed:", error);
     return NextResponse.json(
       { error: "Unable to compile workflow." },
       { status: 500 },
