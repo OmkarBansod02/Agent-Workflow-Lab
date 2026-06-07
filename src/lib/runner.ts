@@ -45,12 +45,16 @@ function runRequestOnlyWorkflow(request: string): DemoRun {
   const trimmedRequest = request.trim();
   const sources = retrieveSources(trimmedRequest);
   const workflowSteps = createWorkflowSteps();
-  const traceEvents = createTraceEvents(sources);
   const draftActions = createDraftActions();
   const evalReport = evaluateRun({
     request: trimmedRequest,
     sources,
     draftActions,
+  });
+  const traceEvents = createTraceEvents({
+    sources,
+    draftActions,
+    readinessScore: evalReport.readinessScore,
   });
   const totalDurationMs = traceEvents.reduce(
     (total, event) => total + event.durationMs,
@@ -277,7 +281,22 @@ function createCompiledTraceEvents(input: {
   readinessScore: number;
 }): TraceEvent[] {
   const sourceIds = input.sources.map((source) => source.id);
-  const searchDetail = WORKFLOW_TOOLS.map((tool) => {
+  const toolsSearched = uniqueTools(
+    input.searchQueriesUsed
+      .map((query) => query.tool)
+      .filter((tool): tool is ToolName => Boolean(tool)),
+  );
+  const searchedTools = toolsSearched.length ? toolsSearched : WORKFLOW_TOOLS;
+  const sourceCount = input.sources.length;
+  const searchQueryCount = input.searchQueriesUsed.length;
+  const queriesWithoutResults = input.searchQueriesUsed.filter(
+    (query) => query.resultCount === 0,
+  ).length;
+  const approvalGateCount = input.compiledWorkflow.approvalGates.length;
+  const approvalRequiredDraftCount = input.draftActions.filter(
+    (action) => action.requiresApproval,
+  ).length;
+  const searchDetail = searchedTools.map((tool) => {
     const queryCount = input.searchQueriesUsed.filter(
       (query) => query.tool === tool,
     ).length;
@@ -286,7 +305,7 @@ function createCompiledTraceEvents(input: {
     return `${tool}: ${queryCount} queries, ${sourceCount} sources`;
   }).join("; ");
   const approvalDetail =
-    input.compiledWorkflow.approvalGates.length > 0
+    approvalGateCount > 0
       ? input.compiledWorkflow.approvalGates
           .map(
             (gate) =>
@@ -303,7 +322,7 @@ function createCompiledTraceEvents(input: {
       status: "success",
       title: "AI workflow plan received",
       label: "Plan received",
-      description: `Received compiled plan: ${input.compiledWorkflow.title}.`,
+      description: `Received compiled plan "${input.compiledWorkflow.title}" with ${input.compiledWorkflow.steps.length} workflow steps, ${input.compiledWorkflow.tools.length} tools, and ${input.compiledWorkflow.missingInfo.length} missing-info items.`,
       detail: input.compiledWorkflow.intent,
       timestamp: "2026-06-07T09:30:00+05:30",
       durationMs: 110,
@@ -312,10 +331,10 @@ function createCompiledTraceEvents(input: {
       id: "trace-compiled-002",
       stepId: input.compiledWorkflow.steps[0]?.id ?? "compiled-search",
       type: "compile",
-      status: "success",
+      status: searchQueryCount > 0 ? "success" : "warning",
       title: "Generated search queries prepared",
       label: "Queries prepared",
-      description: `${input.searchQueriesUsed.length} seeded workspace search queries prepared from the compiled workflow.`,
+      description: `${searchQueryCount} generated search queries prepared for ${formatToolList(searchedTools)}.`,
       detail: input.searchQueriesUsed
         .map((query) => `${query.tool ?? "all"}: ${query.query}`)
         .join(" | "),
@@ -326,11 +345,15 @@ function createCompiledTraceEvents(input: {
       id: "trace-compiled-003",
       stepId: "compiled-search-by-tool",
       type: "search",
-      status: "success",
-      title: "Seeded workspace searched by tool",
+      status:
+        searchQueryCount === 0
+          ? "blocked"
+          : sourceCount > 0 && queriesWithoutResults === 0
+            ? "success"
+            : "warning",
+      title: "Seeded workspace searched",
       label: "Workspace search",
-      description:
-        "Ran generated queries against the seeded Gmail, Calendar, CRM, Slack, and Docs workspace.",
+      description: `Ran ${searchQueryCount} generated queries across ${formatToolList(searchedTools)}; ${queriesWithoutResults} queries returned no seeded source matches.`,
       detail: searchDetail,
       sources: sourceIds,
       timestamp: "2026-06-07T09:30:06+05:30",
@@ -340,10 +363,10 @@ function createCompiledTraceEvents(input: {
       id: "trace-compiled-004",
       stepId: "compiled-sources-retrieved",
       type: "retrieve",
-      status: input.sources.length > 0 ? "success" : "warning",
+      status: sourceCount > 0 ? "success" : "blocked",
       title: "Sources retrieved",
       label: "Sources retrieved",
-      description: `Retrieved ${input.sources.length} deduplicated seeded sources sorted by relevance.`,
+      description: `Retrieved ${sourceCount} deduplicated seeded sources sorted by relevance from ${formatToolList(uniqueTools(input.sources.map((source) => source.tool)))}.`,
       detail: sourceIds.join(", "),
       sources: sourceIds,
       timestamp: "2026-06-07T09:30:11+05:30",
@@ -353,10 +376,13 @@ function createCompiledTraceEvents(input: {
       id: "trace-compiled-005",
       stepId: "compiled-drafts-prepared",
       type: "draft",
-      status: "success",
+      status:
+        approvalRequiredDraftCount === input.draftActions.length
+          ? "success"
+          : "warning",
       title: "Draft actions prepared",
       label: "Drafts prepared",
-      description: `${input.draftActions.length} approval-gated draft actions prepared from retrieved seeded sources.`,
+      description: `${input.draftActions.length} draft actions prepared; ${approvalRequiredDraftCount} are approval-gated before any Gmail, CRM, Slack, or Calendar use.`,
       detail:
         "Prepared customer email draft, CRM update draft, internal Slack update draft, and calendar follow-up draft. No real tool action occurred.",
       sources: sourceIds,
@@ -368,11 +394,14 @@ function createCompiledTraceEvents(input: {
       stepId: "compiled-approval-gates",
       type: "compile",
       status:
-        input.compiledWorkflow.approvalGates.length > 0 ? "success" : "warning",
+        approvalRequiredDraftCount === input.draftActions.length
+          ? approvalGateCount > 0
+            ? "success"
+            : "warning"
+          : "blocked",
       title: "Approval gates applied",
       label: "Approval gates",
-      description:
-        "All prepared drafts remain approval required before email, CRM, Slack, or calendar use.",
+      description: `${approvalGateCount} compiled approval gates applied; ${approvalRequiredDraftCount} of ${input.draftActions.length} draft actions require approval.`,
       detail: approvalDetail,
       timestamp: "2026-06-07T09:30:20+05:30",
       durationMs: 100,
@@ -381,11 +410,16 @@ function createCompiledTraceEvents(input: {
       id: "trace-compiled-007",
       stepId: "compiled-eval-completed",
       type: "eval",
-      status: "success",
+      status:
+        input.readinessScore >= 75
+          ? "success"
+          : input.readinessScore >= 60
+            ? "warning"
+            : "blocked",
       title: "Eval completed",
       label: "Eval completed",
       description:
-        "Completed retrieval, grounding, approval, missing-info, and readiness evaluation.",
+        "Completed retrieval, grounding, approval, missing-info, action-completeness, and readiness evaluation.",
       detail: `Readiness score: ${input.readinessScore}.`,
       timestamp: "2026-06-07T09:30:24+05:30",
       durationMs: 170,
@@ -592,6 +626,22 @@ function sourceIdsForAction(
   }
 
   return ids;
+}
+
+function uniqueTools(tools: ToolName[]): ToolName[] {
+  return Array.from(new Set(tools));
+}
+
+function formatToolList(tools: ToolName[]): string {
+  if (tools.length === 0) {
+    return "no tools";
+  }
+
+  if (tools.length === 1) {
+    return tools[0];
+  }
+
+  return `${tools.slice(0, -1).join(", ")} and ${tools[tools.length - 1]}`;
 }
 
 function sourceEvidence(sources: WorkspaceSource[], sourceIds: string[]): string {
@@ -825,8 +875,19 @@ function createWorkflowSteps(): WorkflowStep[] {
   ];
 }
 
-function createTraceEvents(sources: WorkspaceSource[]): TraceEvent[] {
-  const sourceIds = sources.map((source) => source.id);
+function createTraceEvents(input: {
+  sources: WorkspaceSource[];
+  draftActions: DraftAction[];
+  readinessScore: number;
+}): TraceEvent[] {
+  const sourceIds = input.sources.map((source) => source.id);
+  const searchQueryCount = WORKFLOW_TOOLS.length;
+  const toolsSearched = WORKFLOW_TOOLS;
+  const sourceCount = input.sources.length;
+  const approvalGateCount = 1;
+  const approvalRequiredDraftCount = input.draftActions.filter(
+    (action) => action.requiresApproval,
+  ).length;
 
   return [
     {
@@ -834,46 +895,40 @@ function createTraceEvents(sources: WorkspaceSource[]): TraceEvent[] {
       stepId: "step-trigger",
       type: "compile",
       status: "success",
-      title: "Request parsed into workflow intents",
-      label: "Request parsed",
+      title: "AI workflow plan received",
+      label: "Plan received",
       description:
-        "Detected retrieval needs for Gmail, Calendar, CRM, Slack, and Docs plus four approval-gated drafts.",
+        "Received the seeded fallback workflow plan for the Acme Fintech post-demo follow-up request.",
       detail:
-        "Detected retrieval needs for Gmail, Calendar, CRM, Slack, and Docs plus four approval-gated drafts.",
+        "Plan includes retrieval across Gmail, Calendar, CRM, Slack, and Docs, followed by approval-gated draft preparation.",
       timestamp: "2026-06-07T09:30:00+05:30",
       durationMs: 120,
     },
     {
       id: "trace-002",
       stepId: "step-retrieve-gmail",
-      type: "search",
+      type: "compile",
       status: "success",
-      title: "Gmail sources retrieved",
-      label: "Gmail search",
-      description:
-        "Found customer emails asking about SOC2, migration timeline, pricing confirmation, and follow-up.",
-      detail:
-        "Found customer emails asking about SOC2, migration timeline, pricing confirmation, and follow-up.",
-      tool: "gmail",
-      connector: "gmail",
-      sources: sourceIds.filter((id) => id.startsWith("src-gmail")),
+      title: "Generated search queries prepared",
+      label: "Queries prepared",
+      description: `${searchQueryCount} seeded workspace search queries prepared for ${formatToolList(toolsSearched)}.`,
+      detail: WORKFLOW_TOOLS.map((tool) => `${tool}: ${TOOL_QUERIES[tool]}`).join(
+        " | ",
+      ),
       timestamp: "2026-06-07T09:30:04+05:30",
       durationMs: 180,
     },
     {
       id: "trace-003",
-      stepId: "step-retrieve-calendar",
-      type: "retrieve",
-      status: "success",
-      title: "Calendar demo notes retrieved",
-      label: "Calendar retrieve",
-      description:
-        "Confirmed the product demo happened on 2026-06-06 with customer stakeholders and internal owner notes.",
+      stepId: "step-retrieve-slack-docs",
+      type: "search",
+      status: sourceCount > 0 ? "success" : "blocked",
+      title: "Seeded workspace searched",
+      label: "Workspace search",
+      description: `Searched ${formatToolList(toolsSearched)} using ${searchQueryCount} seeded queries; found ${sourceCount} candidate sources.`,
       detail:
-        "Confirmed the product demo happened on 2026-06-06 with customer stakeholders and internal owner notes.",
-      tool: "calendar",
-      connector: "calendar",
-      sources: sourceIds.filter((id) => id.startsWith("src-calendar")),
+        "Searched customer email, demo meeting, CRM opportunity, internal Slack, and knowledge base data.",
+      sources: sourceIds,
       timestamp: "2026-06-07T09:30:07+05:30",
       durationMs: 150,
     },
@@ -881,95 +936,65 @@ function createTraceEvents(sources: WorkspaceSource[]): TraceEvent[] {
       id: "trace-004",
       stepId: "step-retrieve-crm",
       type: "retrieve",
-      status: "success",
-      title: "CRM deal record retrieved",
-      label: "CRM retrieve",
-      description:
-        "Confirmed Acme Fintech is a $48k ARR technical validation opportunity with security review risk.",
-      detail:
-        "Confirmed Acme Fintech is a $48k ARR technical validation opportunity with security review risk.",
-      tool: "crm",
-      connector: "crm",
-      sources: sourceIds.filter((id) => id.startsWith("src-crm")),
+      status: sourceCount > 0 ? "success" : "blocked",
+      title: "Sources retrieved",
+      label: "Sources retrieved",
+      description: `Retrieved ${sourceCount} relevant seeded sources across ${formatToolList(uniqueTools(input.sources.map((source) => source.tool)))}.`,
+      detail: sourceIds.join(", "),
+      sources: sourceIds,
       timestamp: "2026-06-07T09:30:10+05:30",
       durationMs: 140,
     },
     {
       id: "trace-005",
-      stepId: "step-retrieve-slack-docs",
-      type: "search",
-      status: "success",
-      title: "Slack and docs context retrieved",
-      label: "Slack and docs search",
-      description:
-        "Found internal guidance and knowledge base documents for SOC2, migration, pricing, and onboarding.",
+      stepId: "step-actions",
+      type: "draft",
+      status:
+        approvalRequiredDraftCount === input.draftActions.length
+          ? "success"
+          : "warning",
+      title: "Draft actions prepared",
+      label: "Drafts prepared",
+      description: `${input.draftActions.length} draft actions prepared; ${approvalRequiredDraftCount} remain approval-gated.`,
       detail:
-        "Found internal guidance and knowledge base documents for SOC2, migration, pricing, and onboarding.",
-      tool: "slack",
-      connector: "slack",
-      sources: sourceIds.filter(
-        (id) => id.startsWith("src-slack") || id.startsWith("src-doc"),
-      ),
+        "Prepared customer email draft, CRM update draft, internal Slack update draft, and calendar follow-up draft. No real tool action occurred.",
+      sources: sourceIds,
       timestamp: "2026-06-07T09:30:16+05:30",
       durationMs: 240,
     },
     {
       id: "trace-006",
-      stepId: "step-reason",
-      type: "analyze",
-      status: "warning",
-      title: "Context merged with approval-sensitive gaps",
-      label: "Context analysis",
-      description:
-        "Grounded the response plan and flagged NDA status, finance approval, and customer availability as unresolved items.",
+      stepId: "step-approval",
+      type: "compile",
+      status:
+        approvalRequiredDraftCount === input.draftActions.length
+          ? "success"
+          : "blocked",
+      title: "Approval gates applied",
+      label: "Approval gates",
+      description: `${approvalGateCount} fallback approval gate applied across ${approvalRequiredDraftCount} of ${input.draftActions.length} draft actions.`,
       detail:
-        "Grounded the response plan and flagged NDA status, finance approval, and customer availability as unresolved items.",
-      sources: sourceIds,
+        "All prepared drafts require approval before email, CRM, Slack, or calendar use.",
       timestamp: "2026-06-07T09:30:22+05:30",
       durationMs: 260,
     },
     {
       id: "trace-007",
-      stepId: "step-actions",
-      type: "draft",
-      status: "success",
-      title: "Four draft actions prepared",
-      label: "Drafts prepared",
-      description:
-        "Prepared email, CRM, Slack, and calendar drafts. No real tool action occurred.",
-      detail:
-        "Prepared email, CRM, Slack, and calendar drafts. No real tool action occurred.",
-      sources: sourceIds,
-      timestamp: "2026-06-07T09:30:31+05:30",
-      durationMs: 320,
-    },
-    {
-      id: "trace-008",
-      stepId: "step-approval",
-      type: "compile",
-      status: "success",
-      title: "Approval gate applied",
-      label: "Approval gate",
-      description:
-        "All prepared drafts require review because they include customer communication, CRM notes, internal coordination, or calendar planning.",
-      detail:
-        "All prepared drafts require review because they include customer communication, CRM notes, internal coordination, or calendar planning.",
-      timestamp: "2026-06-07T09:30:33+05:30",
-      durationMs: 90,
-    },
-    {
-      id: "trace-009",
       stepId: "step-eval",
       type: "eval",
-      status: "success",
-      title: "Eval report generated",
+      status:
+        input.readinessScore >= 85
+          ? "success"
+          : input.readinessScore >= 60
+            ? "warning"
+            : "blocked",
+      title: "Eval completed",
       label: "Eval completed",
       description:
-        "Retrieval, grounding, approval coverage, missing information, and readiness were scored for the prepared run.",
-      detail:
-        "Retrieval, grounding, approval coverage, missing information, and readiness were scored for the prepared run.",
-      timestamp: "2026-06-07T09:30:36+05:30",
-      durationMs: 170,
+        "Completed retrieval, grounding, approval, missing-info, action-completeness, and readiness evaluation.",
+      detail: `Readiness score: ${input.readinessScore}.`,
+      timestamp: "2026-06-07T09:30:31+05:30",
+      durationMs: 320,
     },
   ];
 }
