@@ -32,8 +32,8 @@ export const compiledWorkflowStepSchema = z
     id: z.string().min(1),
     type: compilerStepTypeSchema,
     title: z.string().min(1),
-    description: z.string().min(1),
-    tool: compilerToolNameSchema.optional(),
+    description: z.string().nullable(),
+    tool: compilerToolNameSchema.nullable(),
     goal: z.string().min(1),
     dependsOn: z.array(z.string().min(1)),
     requiresApproval: z.boolean(),
@@ -45,7 +45,7 @@ export const approvalGateSchema = z
   .object({
     id: z.string().min(1),
     title: z.string().min(1),
-    description: z.string().min(1),
+    description: z.string().nullable(),
     requiredForTools: z.array(compilerToolNameSchema).min(1),
     riskLevel: compilerRiskLevelSchema,
     reason: z.string().min(1),
@@ -57,7 +57,7 @@ export const compilerEvalCheckSchema = z
     id: z.string().min(1),
     label: z.string().min(1),
     category: compilerEvalCategorySchema,
-    description: z.string().min(1),
+    description: z.string().nullable(),
     riskLevel: compilerRiskLevelSchema,
   })
   .strict();
@@ -86,9 +86,9 @@ export const compiledWorkflowSchema = z
     assumptions: z.array(z.string().min(1)),
     missingInfo: z.array(z.string().min(1)),
     steps: z.array(compiledWorkflowStepSchema).min(1),
-    approvalGates: z.array(approvalGateSchema).min(1),
-    evalChecks: z.array(compilerEvalCheckSchema).min(1),
-    generatedSearchQueries: z.array(generatedSearchQuerySchema).min(1),
+    approvalGates: z.array(approvalGateSchema),
+    evalChecks: z.array(compilerEvalCheckSchema),
+    generatedSearchQueries: z.array(generatedSearchQuerySchema),
   })
   .strict();
 
