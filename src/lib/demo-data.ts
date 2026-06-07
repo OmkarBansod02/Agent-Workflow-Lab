@@ -1,451 +1,484 @@
-import type { DemoWorkspaceData } from "./types";
+import type { DemoRun } from "./types";
 
 export const DEMO_REQUEST =
   "A customer asked about SOC2, migration timeline, pricing, and wants a follow-up after yesterday's demo. Find the right context, prepare a follow-up email, create CRM next steps, draft an internal Slack update, and schedule a follow-up. Ask for approval before taking action.";
 
-export const demoData: DemoWorkspaceData = {
-  workflowSummary: {
-    request: DEMO_REQUEST,
-    stepsCount: 7,
-    sourcesFound: 8,
-    actionsGenerated: 4,
-    totalDurationMs: 3842,
-    connectors: ["gmail", "calendar", "crm", "slack", "docs"],
+const workflowSummary: DemoRun["workflowSummary"] = {
+  title: "Acme Fintech post-demo follow-up workflow",
+  department: "Sales Engineering",
+  persona: "Enterprise AE with sales engineering support",
+  riskLevel: "medium",
+  automationPotential:
+    "High for context retrieval and draft preparation; human approval required before any external or internal action.",
+  businessValue:
+    "Accelerates a security-sensitive technical validation deal by grounding follow-up work in email, calendar, CRM, Slack, and docs context.",
+  tools: ["gmail", "calendar", "crm", "slack", "docs"],
+  missingInfo: [
+    "Whether the SOC2 Type II report NDA is already countersigned",
+    "Finance approval for the proposed pricing structure",
+    "Customer availability for the follow-up meeting",
+  ],
+  assumptions: [
+    "Yesterday's demo refers to the Acme Fintech product demo on 2026-06-06",
+    "The follow-up owner is Jamie Lee, the account executive on the deal",
+    "Drafts should be prepared only and routed for approval before execution",
+  ],
+};
+
+const workflowSteps: DemoRun["workflowSteps"] = [
+  {
+    id: "step-trigger",
+    type: "trigger",
+    title: "Parse messy workplace request",
+    description:
+      "Identify the customer, requested topics, required sources, draft actions, and approval requirement.",
+    status: "completed",
+    riskLevel: "medium",
+    requiresApproval: false,
   },
+  {
+    id: "step-retrieve-gmail",
+    type: "retrieve",
+    title: "Retrieve customer email context",
+    description:
+      "Find Acme Fintech email threads covering SOC2, migration timeline, pricing confirmation, and follow-up expectations.",
+    tool: "gmail",
+    status: "completed",
+    riskLevel: "low",
+    requiresApproval: false,
+  },
+  {
+    id: "step-retrieve-calendar",
+    type: "retrieve",
+    title: "Retrieve demo meeting notes",
+    description:
+      "Locate yesterday's demo, attendees, objections, technical notes, and suggested next meeting window.",
+    tool: "calendar",
+    status: "completed",
+    riskLevel: "low",
+    requiresApproval: false,
+  },
+  {
+    id: "step-retrieve-crm",
+    type: "retrieve",
+    title: "Retrieve CRM deal record",
+    description:
+      "Confirm ARR potential, stage, risk, decision maker, and next step for the Acme Fintech opportunity.",
+    tool: "crm",
+    status: "completed",
+    riskLevel: "low",
+    requiresApproval: false,
+  },
+  {
+    id: "step-retrieve-slack-docs",
+    type: "retrieve",
+    title: "Retrieve internal discussion and docs",
+    description:
+      "Collect Slack guidance from the AE, founder, and engineer plus SOC2, migration, and pricing knowledge base sources.",
+    tool: "slack",
+    status: "completed",
+    riskLevel: "medium",
+    requiresApproval: false,
+  },
+  {
+    id: "step-reason",
+    type: "reason",
+    title: "Compile grounded workflow summary",
+    description:
+      "Resolve the customer's asks against retrieved sources and identify open approvals for security and pricing claims.",
+    status: "completed",
+    riskLevel: "medium",
+    requiresApproval: false,
+  },
+  {
+    id: "step-actions",
+    type: "action",
+    title: "Prepare draft actions",
+    description:
+      "Draft the customer follow-up email, CRM next steps, internal Slack update, and calendar follow-up without taking action.",
+    status: "requires_approval",
+    riskLevel: "medium",
+    requiresApproval: true,
+  },
+  {
+    id: "step-approval",
+    type: "approval",
+    title: "Hold all drafts for approval",
+    description:
+      "Require a human reviewer before any email, CRM, Slack, or calendar action can be carried out.",
+    status: "requires_approval",
+    riskLevel: "medium",
+    requiresApproval: true,
+  },
+  {
+    id: "step-eval",
+    type: "eval",
+    title: "Generate eval and safety report",
+    description:
+      "Score retrieval quality, grounding, approval coverage, missing information, and readiness.",
+    status: "completed",
+    riskLevel: "low",
+    requiresApproval: false,
+  },
+];
 
-  steps: [
-    {
-      id: "step-1",
-      label: "Search Gmail",
-      description:
-        "Retrieved 3 email threads from Acme Corp — SOC2 inquiry, pricing discussion, and demo follow-up request.",
-      status: "completed",
-      connector: "gmail",
-      durationMs: 620,
-    },
-    {
-      id: "step-2",
-      label: "Search Calendar",
-      description:
-        "Found yesterday's demo meeting with Acme Corp. Attendees: Sarah Chen (VP Eng), Marcus Rivera (CTO), Jamie Lee (AE).",
-      status: "completed",
-      connector: "calendar",
-      durationMs: 340,
-    },
-    {
-      id: "step-3",
-      label: "Lookup CRM",
-      description:
-        "Pulled deal record for Acme Corp — $185K ARR, Stage: Technical Evaluation, Risk: Medium, Decision Maker: Sarah Chen.",
-      status: "completed",
-      connector: "crm",
-      durationMs: 410,
-    },
-    {
-      id: "step-4",
-      label: "Search Slack",
-      description:
-        "Found 4 relevant threads in #deals-acme — security objection discussion, pricing strategy alignment, migration timeline concerns.",
-      status: "completed",
-      connector: "slack",
-      durationMs: 580,
-    },
-    {
-      id: "step-5",
-      label: "Search Docs",
-      description:
-        "Retrieved SOC2 security one-pager, migration playbook, and pricing FAQ from the knowledge base.",
-      status: "completed",
-      connector: "docs",
-      durationMs: 290,
-    },
-    {
-      id: "step-6",
-      label: "Compile Context",
-      description:
-        "Merged sources from 5 connectors. Identified key concerns: SOC2 compliance timeline, data migration SLA, enterprise pricing tier.",
-      status: "completed",
-      connector: "docs",
-      durationMs: 820,
-    },
-    {
-      id: "step-7",
-      label: "Generate Drafts",
-      description:
-        "Created 4 draft actions: follow-up email, CRM update, Slack summary, and calendar invite. All pending approval.",
-      status: "completed",
-      connector: "docs",
-      durationMs: 782,
-    },
-  ],
+const sources: DemoRun["sources"] = [
+  {
+    id: "src-gmail-acme-follow-up",
+    tool: "gmail",
+    title: "Acme Fintech follow-up: SOC2, migration, pricing, next steps",
+    sourceType: "email_thread",
+    author: "Maya Desai, VP Operations at Acme Fintech",
+    timestamp: "2026-06-07T09:14:00+05:30",
+    snippet:
+      "Maya thanked the team for yesterday's demo and asked for the SOC2 Type II report under NDA, a practical migration timeline from their legacy workflow tool, confirmation of the quoted pricing, and recommended next steps before security review.",
+    relevanceScore: 0.99,
+    tags: ["customer-request", "soc2", "migration", "pricing", "follow-up"],
+  },
+  {
+    id: "src-calendar-demo",
+    tool: "calendar",
+    title: "Product demo: Acme Fintech x Agent Workflow Lab",
+    sourceType: "calendar_event",
+    author: "Jamie Lee, Account Executive",
+    timestamp: "2026-06-06T16:00:00+05:30",
+    snippet:
+      "60-minute demo with Maya Desai, Raj Mehta, Jamie Lee, Priya Raman, and Alex Kim. Notes: Acme liked approval-gated draft actions, asked whether SOC2 documentation can be shared this week, flagged migration risk for 18 active workflows, and suggested a 30-minute follow-up with security and RevOps.",
+    relevanceScore: 0.95,
+    tags: ["demo", "attendees", "meeting-notes", "follow-up"],
+  },
+  {
+    id: "src-crm-acme-deal",
+    tool: "crm",
+    title: "Acme Fintech opportunity",
+    sourceType: "crm_record",
+    author: "Jamie Lee, Account Executive",
+    timestamp: "2026-06-07T08:35:00+05:30",
+    snippet:
+      "Company: Acme Fintech. ARR potential: $48k. Stage: technical validation. Risk: security review. Decision maker: Maya Desai, VP Operations. Next step: send security and migration docs, then schedule stakeholder follow-up.",
+    relevanceScore: 0.96,
+    tags: ["deal", "$48k-arr", "technical-validation", "security-review"],
+  },
+  {
+    id: "src-slack-acme-thread",
+    tool: "slack",
+    title: "#deal-acme-fintech: security, pricing, and migration plan",
+    sourceType: "slack_thread",
+    author: "Jamie Lee, Priya Raman, Alex Kim",
+    timestamp: "2026-06-06T18:22:00+05:30",
+    snippet:
+      "Jamie noted Maya wants one clear follow-up. Priya said SOC2 summary can be shared now and the full report requires NDA confirmation. Alex estimated a four-to-six week migration if Acme assigns an admin owner. Priya approved holding the current $4k monthly quote but asked Jamie to confirm finance before offering concessions.",
+    relevanceScore: 0.93,
+    tags: ["internal-context", "security", "pricing-strategy", "migration-risk"],
+  },
+  {
+    id: "src-doc-soc2-one-pager",
+    tool: "docs",
+    title: "SOC2 Type II security one-pager",
+    sourceType: "knowledge_base_doc",
+    author: "Security Team",
+    timestamp: "2026-05-28T11:00:00+05:30",
+    snippet:
+      "Customer-safe summary of SOC2 Type II scope, control areas, data handling practices, subprocessor review, report-sharing process, and NDA requirement for the full audit report.",
+    relevanceScore: 0.91,
+    tags: ["soc2", "security", "customer-safe", "nda"],
+  },
+  {
+    id: "src-doc-migration-plan",
+    tool: "docs",
+    title: "Migration plan for workflow automation customers",
+    sourceType: "knowledge_base_doc",
+    author: "Solutions Engineering",
+    timestamp: "2026-05-31T15:30:00+05:30",
+    snippet:
+      "Standard migration plan: discovery, workflow inventory, pilot workspace, connector mapping, approval policy review, user acceptance testing, and staged rollout. Typical range is four to six weeks for 10-25 workflows with a named customer admin.",
+    relevanceScore: 0.9,
+    tags: ["migration", "implementation", "timeline", "solutions-engineering"],
+  },
+  {
+    id: "src-doc-pricing-faq",
+    tool: "docs",
+    title: "Enterprise pricing FAQ",
+    sourceType: "knowledge_base_doc",
+    author: "Revenue Operations",
+    timestamp: "2026-06-01T10:15:00+05:30",
+    snippet:
+      "Enterprise plans may be quoted monthly or annually. Discounts beyond standard annual terms require finance approval. Security review support and guided onboarding are included for technical validation opportunities above $40k ARR.",
+    relevanceScore: 0.88,
+    tags: ["pricing", "enterprise", "finance-approval", "revops"],
+  },
+];
 
-  sources: [
-    {
-      id: "src-1",
-      connector: "gmail",
-      title: "RE: SOC2 Compliance Requirements",
-      summary:
-        "Sarah Chen asked about SOC2 Type II certification timeline and whether audit reports can be shared under NDA. Mentioned their compliance team needs documentation before procurement sign-off.",
-      timestamp: "2025-06-05T14:23:00Z",
-      relevance: 0.96,
-      metadata: {
-        from: "sarah.chen@acmecorp.com",
-        to: "jamie.lee@company.com",
-        thread: "3 messages",
-      },
-    },
-    {
-      id: "src-2",
-      connector: "gmail",
-      title: "Pricing Discussion — Enterprise Tier",
-      summary:
-        "Marcus Rivera requested a breakdown of enterprise vs. growth tier pricing. Specifically asked about volume discounts for 500+ seats and multi-year commitment options.",
-      timestamp: "2025-06-04T10:15:00Z",
-      relevance: 0.91,
-      metadata: {
-        from: "marcus.rivera@acmecorp.com",
-        to: "jamie.lee@company.com",
-        thread: "5 messages",
-      },
-    },
-    {
-      id: "src-3",
-      connector: "gmail",
-      title: "Follow-up Request After Demo",
-      summary:
-        "Sarah Chen thanked the team for yesterday's demo and requested a follow-up with migration timeline details and next steps for a technical deep-dive.",
-      timestamp: "2025-06-06T09:42:00Z",
-      relevance: 0.98,
-      metadata: {
-        from: "sarah.chen@acmecorp.com",
-        to: "jamie.lee@company.com",
-        thread: "1 message",
-      },
-    },
-    {
-      id: "src-4",
-      connector: "calendar",
-      title: "Acme Corp — Product Demo",
-      summary:
-        "60-minute product demo held yesterday. Covered core platform capabilities, integration architecture, and security overview. Sarah asked about migration from legacy system.",
-      timestamp: "2025-06-05T15:00:00Z",
-      relevance: 0.94,
-      metadata: {
-        attendees: "Sarah Chen, Marcus Rivera, Jamie Lee, Alex Patel",
-        duration: "60 min",
-        location: "Zoom",
-      },
-    },
-    {
-      id: "src-5",
-      connector: "crm",
-      title: "Acme Corp — Deal Record",
-      summary:
-        "Enterprise deal in Technical Evaluation stage. $185K ARR potential. Medium risk due to competitor evaluation (Competitor X). Decision maker: Sarah Chen, VP Engineering.",
-      timestamp: "2025-06-06T08:00:00Z",
-      relevance: 0.93,
-      metadata: {
-        stage: "Technical Evaluation",
-        arr: "$185,000",
-        risk: "Medium",
-        nextStep: "Send SOC2 docs + migration plan",
-      },
-    },
-    {
-      id: "src-6",
-      connector: "slack",
-      title: "#deals-acme — Security Objection Thread",
-      summary:
-        "Alex Patel (Engineer): 'Their security team is thorough — they'll want pen test results alongside SOC2.' Jamie Lee (AE): 'Sarah mentioned they need this before legal review.' Priya Sharma (Founder): 'Fast-track the SOC2 summary. This is a priority deal.'",
-      timestamp: "2025-06-05T16:30:00Z",
-      relevance: 0.89,
-      metadata: {
-        channel: "#deals-acme",
-        participants: "3",
-        messages: "12",
-      },
-    },
-    {
-      id: "src-7",
-      connector: "slack",
-      title: "#deals-acme — Pricing & Migration",
-      summary:
-        "Jamie Lee: 'Marcus wants enterprise pricing for 500 seats with 3-year option.' Priya Sharma: 'We can do 15% multi-year discount. Check with finance.' Alex Patel: 'Migration from their legacy stack is ~6 weeks with dedicated support.'",
-      timestamp: "2025-06-05T17:15:00Z",
-      relevance: 0.87,
-      metadata: {
-        channel: "#deals-acme",
-        participants: "3",
-        messages: "8",
-      },
-    },
-    {
-      id: "src-8",
-      connector: "docs",
-      title: "SOC2 Type II — Security One-Pager",
-      summary:
-        "Internal document covering SOC2 Type II certification status, audit timeline, available reports, and NDA-sharing policy. Last updated this quarter.",
-      timestamp: "2025-05-20T12:00:00Z",
-      relevance: 0.85,
-      metadata: {
-        type: "Knowledge Base",
-        lastUpdated: "2025-05-20",
-        owner: "Security Team",
-      },
-    },
-  ],
+const traceEvents: DemoRun["traceEvents"] = [
+  {
+    id: "trace-001",
+    stepId: "step-trigger",
+    type: "request_parsed",
+    status: "success",
+    title: "Request parsed into workflow intents",
+    description:
+      "Detected retrieval needs for Gmail, Calendar, CRM, Slack, and Docs plus four draft-only actions gated by approval.",
+    timestamp: "2026-06-07T09:30:00+05:30",
+  },
+  {
+    id: "trace-002",
+    stepId: "step-retrieve-gmail",
+    type: "connector_search",
+    status: "success",
+    title: "Gmail source retrieved",
+    description:
+      "Found the customer email asking about SOC2, migration timeline, pricing confirmation, and next steps after the demo.",
+    tool: "gmail",
+    sources: ["src-gmail-acme-follow-up"],
+    timestamp: "2026-06-07T09:30:04+05:30",
+  },
+  {
+    id: "trace-003",
+    stepId: "step-retrieve-calendar",
+    type: "source_retrieved",
+    status: "success",
+    title: "Calendar demo notes retrieved",
+    description:
+      "Confirmed the product demo happened on 2026-06-06 with customer stakeholders and internal owner notes.",
+    tool: "calendar",
+    sources: ["src-calendar-demo"],
+    timestamp: "2026-06-07T09:30:07+05:30",
+  },
+  {
+    id: "trace-004",
+    stepId: "step-retrieve-crm",
+    type: "source_retrieved",
+    status: "success",
+    title: "CRM deal record retrieved",
+    description:
+      "Confirmed Acme Fintech is a $48k ARR technical validation opportunity with security review as the primary risk.",
+    tool: "crm",
+    sources: ["src-crm-acme-deal"],
+    timestamp: "2026-06-07T09:30:10+05:30",
+  },
+  {
+    id: "trace-005",
+    stepId: "step-retrieve-slack-docs",
+    type: "connector_search",
+    status: "success",
+    title: "Slack and docs context retrieved",
+    description:
+      "Found internal guidance on SOC2, migration risk, pricing flexibility, and ownership plus three knowledge base documents.",
+    tool: "slack",
+    sources: [
+      "src-slack-acme-thread",
+      "src-doc-soc2-one-pager",
+      "src-doc-migration-plan",
+      "src-doc-pricing-faq",
+    ],
+    timestamp: "2026-06-07T09:30:16+05:30",
+  },
+  {
+    id: "trace-006",
+    stepId: "step-reason",
+    type: "context_merged",
+    status: "warning",
+    title: "Context merged with approval-sensitive gaps",
+    description:
+      "Grounded the response plan and flagged NDA status, finance approval, and customer availability as unresolved items.",
+    sources: sources.map((source) => source.id),
+    timestamp: "2026-06-07T09:30:22+05:30",
+  },
+  {
+    id: "trace-007",
+    stepId: "step-actions",
+    type: "draft_prepared",
+    status: "success",
+    title: "Four draft actions prepared",
+    description:
+      "Prepared email, CRM, Slack, and calendar drafts. No external or internal action was taken.",
+    sources: sources.map((source) => source.id),
+    timestamp: "2026-06-07T09:30:31+05:30",
+  },
+  {
+    id: "trace-008",
+    stepId: "step-approval",
+    type: "approval_gate",
+    status: "success",
+    title: "Approval gate applied",
+    description:
+      "All draft actions require review because they include customer communication, CRM changes, internal coordination, or scheduling.",
+    timestamp: "2026-06-07T09:30:33+05:30",
+  },
+  {
+    id: "trace-009",
+    stepId: "step-eval",
+    type: "eval_completed",
+    status: "success",
+    title: "Eval report generated",
+    description:
+      "Retrieval, grounding, approval coverage, missing information, and readiness were scored for the prepared run.",
+    timestamp: "2026-06-07T09:30:36+05:30",
+  },
+];
 
-  trace: [
-    {
-      id: "trace-1",
-      timestamp: "2025-06-06T10:00:00.000Z",
-      type: "analyze",
-      label: "Parse request",
-      detail:
-        "Identified 5 intents: SOC2 info, migration timeline, pricing, follow-up email, CRM update.",
-      durationMs: 120,
-      status: "success",
-    },
-    {
-      id: "trace-2",
-      timestamp: "2025-06-06T10:00:00.120Z",
-      type: "search",
-      label: "Gmail search",
-      detail:
-        "Queried Gmail connector for threads matching 'Acme Corp SOC2 pricing migration'. Found 3 threads.",
-      durationMs: 620,
-      status: "success",
-    },
-    {
-      id: "trace-3",
-      timestamp: "2025-06-06T10:00:00.740Z",
-      type: "search",
-      label: "Calendar search",
-      detail:
-        "Queried Calendar connector for recent meetings with Acme Corp. Found 1 meeting (yesterday).",
-      durationMs: 340,
-      status: "success",
-    },
-    {
-      id: "trace-4",
-      timestamp: "2025-06-06T10:00:01.080Z",
-      type: "retrieve",
-      label: "CRM lookup",
-      detail:
-        "Retrieved deal record for Acme Corp. Stage: Technical Evaluation, ARR: $185K.",
-      durationMs: 410,
-      status: "success",
-    },
-    {
-      id: "trace-5",
-      timestamp: "2025-06-06T10:00:01.490Z",
-      type: "search",
-      label: "Slack search",
-      detail:
-        "Searched #deals-acme channel. Found 4 relevant threads on security, pricing, migration.",
-      durationMs: 580,
-      status: "success",
-    },
-    {
-      id: "trace-6",
-      timestamp: "2025-06-06T10:00:02.070Z",
-      type: "retrieve",
-      label: "Docs retrieval",
-      detail:
-        "Retrieved 3 knowledge base documents: SOC2 one-pager, migration playbook, pricing FAQ.",
-      durationMs: 290,
-      status: "success",
-    },
-    {
-      id: "trace-7",
-      timestamp: "2025-06-06T10:00:02.360Z",
-      type: "compile",
-      label: "Context compilation",
-      detail:
-        "Merged 8 sources across 5 connectors. Resolved conflicts in pricing data. Ranked by relevance.",
-      durationMs: 820,
-      status: "success",
-    },
-    {
-      id: "trace-8",
-      timestamp: "2025-06-06T10:00:03.180Z",
-      type: "draft",
-      label: "Draft generation",
-      detail:
-        "Generated 4 draft actions: email, CRM update, Slack summary, calendar invite.",
-      durationMs: 540,
-      status: "success",
-    },
-    {
-      id: "trace-9",
-      timestamp: "2025-06-06T10:00:03.720Z",
-      type: "eval",
-      label: "Safety evaluation",
-      detail:
-        "Ran 6 eval checks. All passed. No PII leakage, tone appropriate, sources verified.",
-      durationMs: 122,
-      status: "success",
-    },
-  ],
+const draftActions: DemoRun["draftActions"] = [
+  {
+    id: "draft-email-customer-follow-up",
+    type: "email_draft",
+    title: "Customer follow-up email draft",
+    targetTool: "gmail",
+    requiresApproval: true,
+    approvalReason:
+      "External customer communication includes SOC2 sharing terms, migration estimates, and pricing confirmation.",
+    sourceIds: [
+      "src-gmail-acme-follow-up",
+      "src-calendar-demo",
+      "src-crm-acme-deal",
+      "src-doc-soc2-one-pager",
+      "src-doc-migration-plan",
+      "src-doc-pricing-faq",
+    ],
+    body: `To: Maya Desai <maya.desai@acmefintech.example>
+Subject: Follow-up from yesterday's demo
 
-  actions: [
-    {
-      id: "action-1",
-      type: "email",
-      title: "Follow-up Email to Sarah Chen",
-      summary:
-        "Drafted follow-up email addressing SOC2 documentation, migration timeline, enterprise pricing, and next steps.",
-      body: `Hi Sarah,
+Hi Maya,
 
-Thank you for your time during yesterday's demo — great questions from you and Marcus.
+Thank you for joining yesterday's demo with Raj. I pulled together the follow-up items you requested so your team can continue technical validation.
 
-Following up on the items discussed:
+SOC2: We can provide the SOC2 Type II security one-pager now. The full audit report can be shared under NDA once the agreement is confirmed.
 
-**SOC2 Compliance**
-We hold SOC2 Type II certification. I've attached our security one-pager and can share the full audit report under NDA. Our compliance team can schedule a call with yours if that would be helpful.
+Migration timeline: Based on the 18 active workflows discussed in the demo, the current estimate is a four-to-six week migration. The plan would start with workflow inventory and connector mapping, then move through a pilot workspace, approval policy review, UAT, and staged rollout.
 
-**Migration Timeline**
-Based on your current stack, we estimate a 6-week migration with dedicated engineering support. I've included our migration playbook for reference.
+Pricing: The CRM record reflects a $48k ARR opportunity, aligned to the current enterprise quote. Any discount or concession should be confirmed with finance before it is included in a formal proposal.
 
-**Pricing**
-For 500 seats on the Enterprise tier with a 3-year commitment, we can offer a 15% multi-year discount. I'll have a detailed proposal ready by end of week.
+Recommended next steps:
+1. Confirm NDA status for the full SOC2 report.
+2. Share the migration plan and security one-pager with your security and RevOps stakeholders.
+3. Schedule a 30-minute follow-up with security, RevOps, Jamie, and Alex to review implementation details.
 
-**Next Steps**
-- Share SOC2 audit report (under NDA)
-- Schedule technical deep-dive with your engineering team
-- Send formal pricing proposal
-
-Would Thursday or Friday work for a 30-minute follow-up? Happy to include anyone else from your team.
+Would Tuesday or Wednesday afternoon work for the follow-up?
 
 Best,
 Jamie`,
-      status: "draft",
-      recipient: "sarah.chen@acmecorp.com",
-      metadata: {
-        connector: "Gmail",
-        approvalRequired: "true",
-      },
-    },
-    {
-      id: "action-2",
-      type: "crm",
-      title: "Update Acme Corp Deal Record",
-      summary:
-        "Prepared CRM update: advance stage, log demo outcome, set next steps.",
-      body: `Deal: Acme Corp
-Stage: Technical Evaluation → Proposal Sent
-Last Activity: Product Demo (June 5)
-Next Step: Send SOC2 docs + pricing proposal by EOW
-Notes: Sarah requested SOC2 audit report under NDA. Marcus wants enterprise pricing for 500 seats with 3-year option. Competitor evaluation in progress.
-Risk: Medium (unchanged)
-Follow-up: Thursday/Friday`,
-      status: "draft",
-      metadata: {
-        connector: "CRM",
-        field: "Deal Stage, Next Steps, Notes",
-        approvalRequired: "true",
-      },
-    },
-    {
-      id: "action-3",
-      type: "slack",
-      title: "Internal Update — #deals-acme",
-      summary:
-        "Prepared Slack update summarizing demo outcome and next steps for the team.",
-      body: `📋 **Acme Corp — Post-Demo Update**
-
-Demo went well yesterday. Key takeaways:
-
-• **SOC2**: Sarah needs audit report before legal review. Sharing under NDA — Priya approved fast-tracking the summary.
-• **Pricing**: Marcus wants enterprise tier for 500 seats, 3-year commitment. Priya confirmed we can offer 15% multi-year discount.
-• **Migration**: Estimated 6 weeks with dedicated support. Alex confirmed this based on their legacy stack.
-• **Next steps**: Follow-up email sent to Sarah. Scheduling technical deep-dive for Thursday/Friday. Pricing proposal by EOW.
-
-cc @jamie @alex @priya`,
-      status: "draft",
-      metadata: {
-        connector: "Slack",
-        channel: "#deals-acme",
-        approvalRequired: "true",
-      },
-    },
-    {
-      id: "action-4",
-      type: "calendar",
-      title: "Schedule Follow-up — Acme Corp",
-      summary:
-        "Prepared calendar invite for a 30-minute technical deep-dive follow-up.",
-      body: `Title: Acme Corp — Technical Deep-Dive Follow-up
-Duration: 30 minutes
-Suggested: Thursday June 12 or Friday June 13, 2:00 PM
-Attendees: Sarah Chen, Marcus Rivera, Jamie Lee, Alex Patel
-Agenda:
-  1. SOC2 audit report walkthrough
-  2. Migration plan review
-  3. Enterprise pricing proposal
-  4. Timeline to decision`,
-      status: "draft",
-      metadata: {
-        connector: "Calendar",
-        approvalRequired: "true",
-      },
-    },
-  ],
-
-  eval: {
-    overallScore: 94,
-    readiness: "ready",
-    summary:
-      "All draft actions passed safety and quality checks. Sources are verified, tone is professional, and no sensitive data was exposed. Ready for human review and approval.",
-    checks: [
-      {
-        id: "eval-1",
-        label: "Source Verification",
-        status: "pass",
-        detail:
-          "All 8 sources verified against workspace data. No hallucinated references.",
-        category: "accuracy",
-      },
-      {
-        id: "eval-2",
-        label: "PII Protection",
-        status: "pass",
-        detail:
-          "No personal identifiable information exposed beyond business contact details already in CRM.",
-        category: "safety",
-      },
-      {
-        id: "eval-3",
-        label: "Action Completeness",
-        status: "pass",
-        detail:
-          "All 5 requested intents addressed: SOC2, migration, pricing, email follow-up, CRM update.",
-        category: "completeness",
-      },
-      {
-        id: "eval-4",
-        label: "Tone Appropriateness",
-        status: "pass",
-        detail:
-          "Email tone is professional and consultative. Appropriate for enterprise B2B context.",
-        category: "tone",
-      },
-      {
-        id: "eval-5",
-        label: "Approval Gates",
-        status: "pass",
-        detail:
-          "All 4 actions marked as drafts requiring approval. No auto-execution configured.",
-        category: "compliance",
-      },
-      {
-        id: "eval-6",
-        label: "Pricing Accuracy",
-        status: "warn",
-        detail:
-          "15% multi-year discount referenced from Slack discussion. Recommend confirming with finance before sending proposal.",
-        category: "accuracy",
-      },
+  },
+  {
+    id: "draft-crm-next-steps",
+    type: "crm_update_draft",
+    title: "CRM update draft",
+    targetTool: "crm",
+    requiresApproval: true,
+    approvalReason:
+      "CRM fields affect pipeline reporting, next-step ownership, and forecast quality.",
+    sourceIds: [
+      "src-crm-acme-deal",
+      "src-gmail-acme-follow-up",
+      "src-calendar-demo",
+      "src-slack-acme-thread",
     ],
+    body: `Opportunity: Acme Fintech
+ARR potential: $48k
+Stage: Technical validation
+Risk: Security review
+Decision maker: Maya Desai, VP Operations
+
+Prepared CRM changes:
+- Add post-demo note covering SOC2, migration timeline, pricing confirmation, and requested follow-up.
+- Set next step to "Send security one-pager, migration plan, and pricing confirmation after approval."
+- Add follow-up task for Jamie Lee to coordinate a 30-minute security and RevOps review.
+- Keep risk at "security review" until NDA status and SOC2 report-sharing path are confirmed.
+- Add pricing approval reminder before any discount language is included in a proposal.`,
+  },
+  {
+    id: "draft-slack-internal-update",
+    type: "slack_update_draft",
+    title: "Internal Slack update draft",
+    targetTool: "slack",
+    requiresApproval: true,
+    approvalReason:
+      "Internal coordination references deal strategy, pricing posture, and security review handling.",
+    sourceIds: [
+      "src-slack-acme-thread",
+      "src-calendar-demo",
+      "src-crm-acme-deal",
+      "src-doc-pricing-faq",
+    ],
+    body: `Channel: #deal-acme-fintech
+
+Prepared update:
+
+Acme Fintech post-demo follow-up is ready for review.
+
+Customer asks:
+- SOC2 Type II one-pager now; full report once NDA status is confirmed.
+- Migration estimate for 18 active workflows from their legacy workflow tool.
+- Confirmation of the current $48k ARR enterprise pricing path.
+- Follow-up with security and RevOps stakeholders.
+
+Recommended owner split:
+- Jamie: customer follow-up and CRM next-step draft.
+- Alex: validate four-to-six week migration estimate and join follow-up.
+- Priya: review pricing language before anything customer-facing includes discount flexibility.
+
+Approval required before sharing with the customer or making workspace changes.`,
+  },
+  {
+    id: "draft-calendar-follow-up",
+    type: "calendar_event_draft",
+    title: "Calendar follow-up draft",
+    targetTool: "calendar",
+    requiresApproval: true,
+    approvalReason:
+      "Scheduling should wait for customer availability and internal owner approval.",
+    sourceIds: [
+      "src-gmail-acme-follow-up",
+      "src-calendar-demo",
+      "src-crm-acme-deal",
+    ],
+    body: `Title: Acme Fintech security and migration follow-up
+Duration: 30 minutes
+Suggested window: Tuesday or Wednesday afternoon
+Proposed attendees: Maya Desai, Raj Mehta, Jamie Lee, Alex Kim
+
+Agenda:
+1. Confirm SOC2 report-sharing path and NDA status.
+2. Review four-to-six week migration plan and owner responsibilities.
+3. Confirm pricing proposal path and finance approval requirement.
+4. Align on technical validation next steps and decision timeline.`,
+  },
+];
+
+const evalReport: DemoRun["evalReport"] = {
+  retrievalScore: 96,
+  groundingScore: 94,
+  approvalScore: 100,
+  missingInfoScore: 82,
+  readinessScore: 91,
+  warnings: [
+    "Full SOC2 audit report sharing depends on NDA confirmation.",
+    "Pricing concessions require finance approval before customer-facing language is finalized.",
+    "Follow-up meeting time is a proposed window until the customer confirms availability.",
+  ],
+  recommendations: [
+    "Route the email draft to the AE and security owner before sharing externally.",
+    "Confirm finance guidance before adding discount terms to the pricing proposal.",
+    "Attach the SOC2 one-pager and migration plan only after approval.",
+    "Keep all four actions in draft state until the reviewer approves the run.",
+  ],
+};
+
+export const demoRun: DemoRun = {
+  request: DEMO_REQUEST,
+  workflowSummary,
+  workflowSteps,
+  sources,
+  traceEvents,
+  draftActions,
+  evalReport,
+  rawJson: {
+    request: DEMO_REQUEST,
+    workflowSummary,
+    workflowSteps,
+    sources,
+    traceEvents,
+    draftActions,
+    evalReport,
   },
 };
+
+export const demoData = demoRun;
