@@ -85,10 +85,16 @@ export default function AppPage() {
     setError(null);
 
     try {
+      const payload_body: { request: string; compiledWorkflow?: CompiledWorkflow } =
+        { request: trimmedRequest };
+      if (compiledWorkflow) {
+        payload_body.compiledWorkflow = compiledWorkflow;
+      }
+
       const response = await fetch("/api/run", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ request: trimmedRequest }),
+        body: JSON.stringify(payload_body),
       });
       const payload = await response.json();
 
@@ -169,6 +175,24 @@ export default function AppPage() {
             <CompiledWorkflowPanel workflow={compiledWorkflow} />
           </>
         )}
+
+        {/* Run mode info */}
+        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+          <span>
+            Runner uses the compiled AI plan when available, then executes
+            deterministically against the seeded workspace.
+          </span>
+          {run.rawJson.mode === "compiled-workflow" && (
+            <Badge variant="outline" className="text-[10px] shrink-0">
+              Run mode: compiled AI plan
+            </Badge>
+          )}
+          {run.rawJson.mode === "request-only" && (
+            <Badge variant="outline" className="text-[10px] shrink-0">
+              Run mode: request-only seeded runner
+            </Badge>
+          )}
+        </div>
 
         <Separator />
 
