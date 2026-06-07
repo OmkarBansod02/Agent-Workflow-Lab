@@ -1,5 +1,5 @@
 import { openai } from "@ai-sdk/openai";
-import { generateObject } from "ai";
+import { generateText, Output } from "ai";
 import {
   compiledWorkflowSchema,
   type ApprovalGate,
@@ -34,18 +34,19 @@ export async function compileWorkflow(
     return getFallbackCompiledWorkflow(request);
   }
 
-  const result = await generateObject({
+  const result = await generateText({
     model: openai(process.env.OPENAI_MODEL ?? DEFAULT_MODEL),
-    schema: compiledWorkflowSchema,
-    schemaName: "CompiledWorkflow",
-    schemaDescription:
-      "A strict plan for an AI WorkOS lab workflow. This is only a plan and must not include completed tool actions.",
+    output: Output.object({ schema: compiledWorkflowSchema }),
     system: SYSTEM_PROMPT,
     prompt: buildCompilerPrompt(request),
     temperature: 0.2,
   });
 
-  return enforceCompilerRules(result.object);
+  if (!result.output) {
+    throw new Error("Compiler returned no structured output.");
+  }
+
+  return enforceCompilerRules(result.output);
 }
 
 export function getFallbackCompiledWorkflow(
