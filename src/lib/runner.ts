@@ -1,5 +1,6 @@
 import { evaluateRun } from "./eval";
 import { searchWorkspace } from "./search";
+import type { CompiledWorkflow } from "./compiler-schema";
 import type {
   DemoRun,
   DraftAction,
@@ -20,7 +21,27 @@ const TOOL_QUERIES: Record<ToolName, string> = {
   docs: "SOC2 one-pager migration plan pricing FAQ onboarding checklist",
 };
 
-export function runWorkflow(request: string): DemoRun {
+interface SearchQueryRun {
+  id: string;
+  tool?: ToolName;
+  query: string;
+  purpose: string;
+  resultCount: number;
+  sourceIds: string[];
+}
+
+export function runWorkflow(
+  request: string,
+  compiledWorkflow?: CompiledWorkflow,
+): DemoRun {
+  if (compiledWorkflow) {
+    return runCompiledWorkflow(request, compiledWorkflow);
+  }
+
+  return runRequestOnlyWorkflow(request);
+}
+
+function runRequestOnlyWorkflow(request: string): DemoRun {
   const trimmedRequest = request.trim();
   const sources = retrieveSources(trimmedRequest);
   const workflowSteps = createWorkflowSteps();
@@ -78,6 +99,7 @@ export function runWorkflow(request: string): DemoRun {
   };
 
   run.rawJson = {
+    mode: "request-only",
     request: run.request,
     workflowSummary: run.workflowSummary,
     workflowSteps: run.workflowSteps,
@@ -88,6 +110,572 @@ export function runWorkflow(request: string): DemoRun {
   };
 
   return run;
+}
+
+function runCompiledWorkflow(
+  request: string,
+  compiledWorkflow: CompiledWorkflow,
+): DemoRun {
+  const trimmedRequest = request.trim();
+  const { sources, searchQueriesUsed } = retrieveCompiledSources(
+    trimmedRequest,
+    compiledWorkflow,
+  );
+  const workflowSteps = createCompiledWorkflowSteps(compiledWorkflow);
+  const draftActions = createCompiledDraftActions(compiledWorkflow, sources);
+  const evalReport = evaluateRun({
+    request: trimmedRequest,
+    sources,
+    draftActions,
+    compiledWorkflow,
+  });
+  const traceEvents = createCompiledTraceEvents({
+    compiledWorkflow,
+    sources,
+    searchQueriesUsed,
+    draftActions,
+    readinessScore: evalReport.readinessScore,
+  });
+  const totalDurationMs = traceEvents.reduce(
+    (total, event) => total + event.durationMs,
+    0,
+  );
+  const tools = compiledWorkflow.tools.length
+    ? compiledWorkflow.tools
+    : WORKFLOW_TOOLS;
+  const workflowSummary: WorkflowSummaryData = {
+    title: compiledWorkflow.title,
+    department: compiledWorkflow.department,
+    persona: compiledWorkflow.persona,
+    riskLevel: compiledWorkflow.riskLevel,
+    automationPotential: compiledWorkflow.automationPotential,
+    businessValue: compiledWorkflow.businessValue,
+    tools,
+    missingInfo: compiledWorkflow.missingInfo,
+    assumptions: compiledWorkflow.assumptions,
+    stepsCount: workflowSteps.length,
+    sourcesFound: sources.length,
+    actionsGenerated: draftActions.length,
+    totalDurationMs,
+    connectors: tools,
+  };
+
+  const run: DemoRun = {
+    request: trimmedRequest,
+    workflowSummary,
+    workflowSteps,
+    steps: workflowSteps,
+    sources,
+    traceEvents,
+    trace: traceEvents,
+    draftActions,
+    actions: draftActions,
+    evalReport,
+    eval: evalReport,
+    rawJson: {
+      mode: "compiled-workflow",
+      compiledWorkflow,
+      searchQueriesUsed,
+      sourceIdsUsed: sources.map((source) => source.id),
+    },
+  };
+
+  return run;
+}
+
+function retrieveCompiledSources(
+  request: string,
+  compiledWorkflow: CompiledWorkflow,
+): { sources: WorkspaceSource[]; searchQueriesUsed: SearchQueryRun[] } {
+  const generatedQueries = compiledWorkflow.generatedSearchQueries.filter(
+    (query) => query.query.trim(),
+  );
+
+  if (generatedQueries.length === 0) {
+    const sources = retrieveSources(request).slice(0, 10);
+    const searchQueriesUsed = WORKFLOW_TOOLS.map((tool) => ({
+      id: `fallback-${tool}`,
+      tool,
+      query: `${request} ${TOOL_QUERIES[tool]}`,
+      purpose: "Fallback request-based seeded workspace search.",
+      resultCount: sources.filter((source) => source.tool === tool).length,
+      sourceIds: sources
+        .filter((source) => source.tool === tool)
+        .map((source) => source.id),
+    }));
+
+    return { sources, searchQueriesUsed };
+  }
+
+  const byId = new Map<string, WorkspaceSource>();
+  const searchQueriesUsed: SearchQueryRun[] = [];
+
+  for (const query of generatedQueries) {
+    const results = searchWorkspace(query.query, [query.tool]);
+    searchQueriesUsed.push({
+      id: query.id,
+      tool: query.tool,
+      query: query.query,
+      purpose: query.purpose,
+      resultCount: results.length,
+      sourceIds: results.map((source) => source.id),
+    });
+
+    for (const source of results) {
+      const existing = byId.get(source.id);
+
+      if (!existing || source.relevanceScore > existing.relevanceScore) {
+        byId.set(source.id, source);
+      }
+    }
+  }
+
+  const sources = Array.from(byId.values())
+    .sort((a, b) => {
+      if (b.relevanceScore !== a.relevanceScore) {
+        return b.relevanceScore - a.relevanceScore;
+      }
+
+      return a.id.localeCompare(b.id);
+    })
+    .slice(0, 10);
+
+  return { sources, searchQueriesUsed };
+}
+
+function createCompiledWorkflowSteps(
+  compiledWorkflow: CompiledWorkflow,
+): WorkflowStep[] {
+  const fallbackConnector = compiledWorkflow.tools[0] ?? "docs";
+
+  return compiledWorkflow.steps.map((step, index) => {
+    const connector = step.tool ?? connectorForStepType(step.type, fallbackConnector);
+    const requiresApproval =
+      step.requiresApproval || step.type === "approval" || step.type === "action";
+
+    return {
+      id: step.id,
+      type: step.type,
+      title: step.title,
+      label: stepLabel(step.title, index),
+      description: step.description ?? step.goal,
+      tool: step.tool ?? undefined,
+      connector,
+      status: requiresApproval ? "requires_approval" : "completed",
+      riskLevel: step.riskLevel,
+      requiresApproval,
+      durationMs: durationForStepType(step.type, index),
+    };
+  });
+}
+
+function createCompiledTraceEvents(input: {
+  compiledWorkflow: CompiledWorkflow;
+  sources: WorkspaceSource[];
+  searchQueriesUsed: SearchQueryRun[];
+  draftActions: DraftAction[];
+  readinessScore: number;
+}): TraceEvent[] {
+  const sourceIds = input.sources.map((source) => source.id);
+  const searchDetail = WORKFLOW_TOOLS.map((tool) => {
+    const queryCount = input.searchQueriesUsed.filter(
+      (query) => query.tool === tool,
+    ).length;
+    const sourceCount = input.sources.filter((source) => source.tool === tool).length;
+
+    return `${tool}: ${queryCount} queries, ${sourceCount} sources`;
+  }).join("; ");
+  const approvalDetail =
+    input.compiledWorkflow.approvalGates.length > 0
+      ? input.compiledWorkflow.approvalGates
+          .map(
+            (gate) =>
+              `${gate.title} requires ${gate.requiredForTools.join(", ")} review`,
+          )
+          .join("; ")
+      : "No compiled approval gates were provided, so all drafts remain approval required.";
+
+  return [
+    {
+      id: "trace-compiled-001",
+      stepId: input.compiledWorkflow.steps[0]?.id ?? "compiled-plan",
+      type: "compile",
+      status: "success",
+      title: "AI workflow plan received",
+      label: "Plan received",
+      description: `Received compiled plan: ${input.compiledWorkflow.title}.`,
+      detail: input.compiledWorkflow.intent,
+      timestamp: "2026-06-07T09:30:00+05:30",
+      durationMs: 110,
+    },
+    {
+      id: "trace-compiled-002",
+      stepId: input.compiledWorkflow.steps[0]?.id ?? "compiled-search",
+      type: "compile",
+      status: "success",
+      title: "Generated search queries prepared",
+      label: "Queries prepared",
+      description: `${input.searchQueriesUsed.length} seeded workspace search queries prepared from the compiled workflow.`,
+      detail: input.searchQueriesUsed
+        .map((query) => `${query.tool ?? "all"}: ${query.query}`)
+        .join(" | "),
+      timestamp: "2026-06-07T09:30:02+05:30",
+      durationMs: 140,
+    },
+    {
+      id: "trace-compiled-003",
+      stepId: "compiled-search-by-tool",
+      type: "search",
+      status: "success",
+      title: "Seeded workspace searched by tool",
+      label: "Workspace search",
+      description:
+        "Ran generated queries against the seeded Gmail, Calendar, CRM, Slack, and Docs workspace.",
+      detail: searchDetail,
+      sources: sourceIds,
+      timestamp: "2026-06-07T09:30:06+05:30",
+      durationMs: 280,
+    },
+    {
+      id: "trace-compiled-004",
+      stepId: "compiled-sources-retrieved",
+      type: "retrieve",
+      status: input.sources.length > 0 ? "success" : "warning",
+      title: "Sources retrieved",
+      label: "Sources retrieved",
+      description: `Retrieved ${input.sources.length} deduplicated seeded sources sorted by relevance.`,
+      detail: sourceIds.join(", "),
+      sources: sourceIds,
+      timestamp: "2026-06-07T09:30:11+05:30",
+      durationMs: 210,
+    },
+    {
+      id: "trace-compiled-005",
+      stepId: "compiled-drafts-prepared",
+      type: "draft",
+      status: "success",
+      title: "Draft actions prepared",
+      label: "Drafts prepared",
+      description: `${input.draftActions.length} approval-gated draft actions prepared from retrieved seeded sources.`,
+      detail:
+        "Prepared customer email draft, CRM update draft, internal Slack update draft, and calendar follow-up draft. No real tool action occurred.",
+      sources: sourceIds,
+      timestamp: "2026-06-07T09:30:16+05:30",
+      durationMs: 340,
+    },
+    {
+      id: "trace-compiled-006",
+      stepId: "compiled-approval-gates",
+      type: "compile",
+      status:
+        input.compiledWorkflow.approvalGates.length > 0 ? "success" : "warning",
+      title: "Approval gates applied",
+      label: "Approval gates",
+      description:
+        "All prepared drafts remain approval required before email, CRM, Slack, or calendar use.",
+      detail: approvalDetail,
+      timestamp: "2026-06-07T09:30:20+05:30",
+      durationMs: 100,
+    },
+    {
+      id: "trace-compiled-007",
+      stepId: "compiled-eval-completed",
+      type: "eval",
+      status: "success",
+      title: "Eval completed",
+      label: "Eval completed",
+      description:
+        "Completed retrieval, grounding, approval, missing-info, and readiness evaluation.",
+      detail: `Readiness score: ${input.readinessScore}.`,
+      timestamp: "2026-06-07T09:30:24+05:30",
+      durationMs: 170,
+    },
+  ];
+}
+
+function createCompiledDraftActions(
+  compiledWorkflow: CompiledWorkflow,
+  sources: WorkspaceSource[],
+): DraftAction[] {
+  const approvalText = approvalGateText(compiledWorkflow);
+  const missingInfoText = missingInfoTextForDrafts(compiledWorkflow);
+  const planText = `Compiled plan: ${compiledWorkflow.title}. Intent: ${compiledWorkflow.intent}`;
+  const emailSourceIds = sourceIdsForAction(sources, [
+    "gmail",
+    "calendar",
+    "crm",
+    "docs",
+  ]);
+  const crmSourceIds = sourceIdsForAction(sources, [
+    "crm",
+    "gmail",
+    "calendar",
+    "slack",
+    "docs",
+  ]);
+  const slackSourceIds = sourceIdsForAction(sources, [
+    "slack",
+    "crm",
+    "calendar",
+    "docs",
+    "gmail",
+  ]);
+  const calendarSourceIds = sourceIdsForAction(sources, [
+    "calendar",
+    "gmail",
+    "crm",
+    "docs",
+  ]);
+
+  return [
+    {
+      id: "draft-email-customer-follow-up",
+      type: "email",
+      title: "Customer follow-up email draft",
+      summary:
+        "Drafted customer follow-up grounded in the compiled workflow, retrieved SOC2, migration, pricing, CRM, and calendar context.",
+      targetTool: "gmail",
+      recipient: "Maya Desai <maya.desai@acmefintech.example>",
+      status: "approval_required",
+      requiresApproval: true,
+      approvalReason: approvalReasonForTool(compiledWorkflow, "gmail"),
+      sourceIds: emailSourceIds,
+      body: `To: Maya Desai <maya.desai@acmefintech.example>
+Subject: Follow-up from yesterday's demo
+
+Hi Maya,
+
+Thank you for joining yesterday's demo with Raj. I prepared a follow-up draft for Acme's technical validation using the approved seeded workspace context.
+
+${planText}
+
+Grounded context:
+${sourceEvidence(sources, emailSourceIds)}
+
+Prepared response points:
+- SOC2: provide the customer-safe SOC2 Type II one-pager after approval; the full report path still depends on NDA confirmation.
+- Migration: use the four-to-six week estimate for 18 workflows when Acme names an admin owner and connector mapping starts early.
+- Pricing: reference the current $48k ARR enterprise path and keep any concession language pending finance review.
+- Follow-up: propose a 30-minute security and RevOps session with Maya, Raj, Jamie, and Alex.
+
+${missingInfoText}
+${approvalText}
+
+Approval required before this draft is used.`,
+    },
+    {
+      id: "draft-crm-next-steps",
+      type: "crm",
+      title: "CRM update draft",
+      summary:
+        "Prepared CRM update draft grounded in the compiled workflow, opportunity source, customer asks, and approval gates.",
+      targetTool: "crm",
+      status: "approval_required",
+      requiresApproval: true,
+      approvalReason: approvalReasonForTool(compiledWorkflow, "crm"),
+      sourceIds: crmSourceIds,
+      body: `Opportunity: Acme Fintech
+
+${planText}
+
+Grounded context:
+${sourceEvidence(sources, crmSourceIds)}
+
+Prepared CRM update draft:
+- Add a post-demo note covering SOC2, migration timeline, pricing confirmation, and stakeholder follow-up.
+- Keep stage as technical validation and risk as security review until NDA status is confirmed.
+- Prepare next step for Jamie to coordinate security one-pager review, migration plan review, and pricing approval review.
+- Track finance review before any customer-facing pricing concession language.
+
+${missingInfoText}
+${approvalText}
+
+Approval required before this CRM draft is used.`,
+    },
+    {
+      id: "draft-slack-internal-update",
+      type: "slack",
+      title: "Internal Slack update draft",
+      summary:
+        "Prepared internal Slack update draft grounded in retrieved internal guidance, deal context, and compiled approval requirements.",
+      targetTool: "slack",
+      status: "approval_required",
+      requiresApproval: true,
+      approvalReason: approvalReasonForTool(compiledWorkflow, "slack"),
+      sourceIds: slackSourceIds,
+      body: `Channel: #deal-acme-fintech
+
+Prepared internal update draft:
+
+${planText}
+
+Grounded context:
+${sourceEvidence(sources, slackSourceIds)}
+
+Customer asks:
+- SOC2 one-pager and full report path under NDA.
+- Migration timeline for 18 active workflows.
+- Confirmation of the current enterprise pricing path.
+- Follow-up with security and RevOps stakeholders.
+
+Owner review:
+- Jamie: review customer follow-up and CRM draft.
+- Alex: confirm migration estimate and follow-up attendance.
+- Priya: review pricing language and finance approval requirement.
+
+${missingInfoText}
+${approvalText}
+
+Approval required before this Slack draft is used.`,
+    },
+    {
+      id: "draft-calendar-follow-up",
+      type: "calendar",
+      title: "Calendar follow-up draft",
+      summary:
+        "Prepared calendar follow-up draft grounded in the compiled workflow, demo notes, and unresolved scheduling information.",
+      targetTool: "calendar",
+      status: "approval_required",
+      requiresApproval: true,
+      approvalReason: approvalReasonForTool(compiledWorkflow, "calendar"),
+      sourceIds: calendarSourceIds,
+      body: `Title: Acme Fintech security and migration follow-up
+Duration: 30 minutes
+Suggested window: Tuesday or Wednesday afternoon
+Proposed attendees: Maya Desai, Raj Mehta, Jamie Lee, Alex Kim
+
+${planText}
+
+Grounded context:
+${sourceEvidence(sources, calendarSourceIds)}
+
+Agenda draft:
+1. Confirm SOC2 report-sharing path and NDA status.
+2. Review the four-to-six week migration plan and owner responsibilities.
+3. Review pricing proposal path and finance approval requirement.
+4. Align technical validation next steps and decision timeline.
+
+${missingInfoText}
+${approvalText}
+
+Approval required before this calendar draft is used.`,
+    },
+  ];
+}
+
+function sourceIdsForAction(
+  sources: WorkspaceSource[],
+  preferredTools: ToolName[],
+): string[] {
+  const ids: string[] = [];
+
+  for (const tool of preferredTools) {
+    for (const source of sources.filter((candidate) => candidate.tool === tool)) {
+      if (!ids.includes(source.id)) {
+        ids.push(source.id);
+      }
+
+      if (ids.length >= 7) {
+        return ids;
+      }
+    }
+  }
+
+  for (const source of sources) {
+    if (!ids.includes(source.id)) {
+      ids.push(source.id);
+    }
+
+    if (ids.length >= 7) {
+      break;
+    }
+  }
+
+  return ids;
+}
+
+function sourceEvidence(sources: WorkspaceSource[], sourceIds: string[]): string {
+  const evidence = sourceIds
+    .map((sourceId) => sources.find((source) => source.id === sourceId))
+    .filter((source): source is WorkspaceSource => Boolean(source))
+    .slice(0, 5)
+    .map((source) => `- ${source.title}: ${source.snippet}`);
+
+  return evidence.length > 0
+    ? evidence.join("\n")
+    : "- No seeded source matched this draft directly; approval review should verify the content.";
+}
+
+function approvalGateText(compiledWorkflow: CompiledWorkflow): string {
+  if (compiledWorkflow.approvalGates.length === 0) {
+    return "Approval gates: all drafts are approval required because no compiled gate narrowed the review path.";
+  }
+
+  return `Approval gates: ${compiledWorkflow.approvalGates
+    .map((gate) => `${gate.title} (${gate.requiredForTools.join(", ")})`)
+    .join("; ")}.`;
+}
+
+function missingInfoTextForDrafts(compiledWorkflow: CompiledWorkflow): string {
+  if (compiledWorkflow.missingInfo.length === 0) {
+    return "Missing information: none listed by the compiled workflow.";
+  }
+
+  return `Missing information to resolve:
+${compiledWorkflow.missingInfo.map((item) => `- ${item}`).join("\n")}`;
+}
+
+function approvalReasonForTool(
+  compiledWorkflow: CompiledWorkflow,
+  tool: ToolName,
+): string {
+  const gate = compiledWorkflow.approvalGates.find((candidate) =>
+    candidate.requiredForTools.includes(tool),
+  );
+
+  if (gate) {
+    return `${gate.title}: ${gate.reason}`;
+  }
+
+  return "Approval required before any drafted customer communication or workspace change is used.";
+}
+
+function connectorForStepType(
+  type: WorkflowStep["type"],
+  fallbackConnector: ToolName,
+): ToolName {
+  if (type === "eval" || type === "reason") {
+    return "docs";
+  }
+
+  if (type === "approval") {
+    return "crm";
+  }
+
+  return fallbackConnector;
+}
+
+function stepLabel(title: string, index: number): string {
+  const trimmedTitle = title.trim();
+
+  if (trimmedTitle.length <= 24) {
+    return trimmedTitle;
+  }
+
+  return `Step ${index + 1}`;
+}
+
+function durationForStepType(type: WorkflowStep["type"], index: number): number {
+  const baseDuration: Record<WorkflowStep["type"], number> = {
+    trigger: 120,
+    retrieve: 190,
+    reason: 260,
+    action: 320,
+    approval: 110,
+    eval: 170,
+  };
+
+  return baseDuration[type] + index * 5;
 }
 
 function retrieveSources(request: string): WorkspaceSource[] {
