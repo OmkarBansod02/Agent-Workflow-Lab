@@ -139,6 +139,14 @@ export default function AppPage() {
 
       {/* Main content */}
       <main className="flex-1 mx-auto w-full max-w-5xl px-6 py-8 space-y-8">
+        {/* Architecture explanation */}
+        <div className="rounded-lg border border-border/60 bg-muted/30 px-4 py-3">
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            <span className="font-medium text-foreground/80">How it works:</span>{" "}
+            AI plans the workflow. Deterministic runner executes against seeded workspace data. Eval checks safety before any action.
+          </p>
+        </div>
+
         {/* Visual sequence */}
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           {SEQUENCE_STEPS.map(({ label, step }, i) => (
