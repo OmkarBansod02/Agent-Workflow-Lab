@@ -3,6 +3,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { TraceEvent } from "@/lib/types";
 
 const typeColors: Record<TraceEvent["type"], string> = {
+  request_parsed: "bg-cyan-500/10 text-cyan-700 dark:text-cyan-400",
+  connector_search: "bg-blue-500/10 text-blue-700 dark:text-blue-400",
+  source_retrieved: "bg-violet-500/10 text-violet-700 dark:text-violet-400",
+  context_merged: "bg-amber-500/10 text-amber-700 dark:text-amber-400",
+  draft_prepared: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
+  approval_gate: "bg-cyan-500/10 text-cyan-700 dark:text-cyan-400",
+  eval_completed: "bg-rose-500/10 text-rose-700 dark:text-rose-400",
   search: "bg-blue-500/10 text-blue-700 dark:text-blue-400",
   retrieve: "bg-violet-500/10 text-violet-700 dark:text-violet-400",
   analyze: "bg-amber-500/10 text-amber-700 dark:text-amber-400",
@@ -72,6 +79,13 @@ export function TraceTimeline({ events }: TraceTimelineProps) {
 
 function getBarColor(type: TraceEvent["type"]): string {
   const map: Record<TraceEvent["type"], string> = {
+    request_parsed: "bg-cyan-500",
+    connector_search: "bg-blue-500",
+    source_retrieved: "bg-violet-500",
+    context_merged: "bg-amber-500",
+    draft_prepared: "bg-emerald-500",
+    approval_gate: "bg-cyan-500",
+    eval_completed: "bg-rose-500",
     search: "bg-blue-500",
     retrieve: "bg-violet-500",
     analyze: "bg-amber-500",

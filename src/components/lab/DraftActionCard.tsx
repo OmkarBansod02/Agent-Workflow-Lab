@@ -11,6 +11,10 @@ import {
 import type { DraftAction } from "@/lib/types";
 
 const typeLabels: Record<DraftAction["type"], string> = {
+  email_draft: "Email Draft",
+  crm_update_draft: "CRM Update",
+  slack_update_draft: "Slack Update",
+  calendar_event_draft: "Calendar Draft",
   email: "Email Draft",
   crm: "CRM Update",
   slack: "Slack Update",
@@ -29,8 +33,7 @@ export function DraftActionCard({ actions }: DraftActionCardProps) {
       </CardHeader>
       <CardContent>
         <p className="mb-4 text-xs text-muted-foreground">
-          All actions are drafts requiring approval. Nothing has been sent or
-          executed.
+          All actions are drafts requiring approval. No real tools are touched.
         </p>
         <Accordion type="multiple" className="space-y-2">
           {actions.map((action) => (

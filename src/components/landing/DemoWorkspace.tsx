@@ -12,7 +12,7 @@ const connectors = [
   },
   {
     name: "CRM",
-    items: ["$185K deal record", "Technical Evaluation stage", "Risk & decision maker"],
+    items: ["$48k ARR deal record", "Technical validation stage", "Risk & decision maker"],
   },
   {
     name: "Slack",
