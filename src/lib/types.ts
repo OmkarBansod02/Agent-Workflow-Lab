@@ -92,7 +92,7 @@ export type TraceEventType =
   | "eval"
   | "compile";
 
-export type TraceEventStatus = "success" | "warning" | "error";
+export type TraceEventStatus = "success" | "warning" | "blocked";
 
 export interface TraceEvent {
   id: string;
@@ -141,7 +141,13 @@ export type EvalCheckStatus = "pass" | "warn" | "fail";
 export interface EvalCheck {
   id: string;
   label: string;
-  category: "retrieval" | "grounding" | "approval" | "missing-info" | "readiness";
+  category:
+    | "retrieval"
+    | "grounding"
+    | "approval"
+    | "missing-info"
+    | "action-completeness"
+    | "readiness";
   status: EvalCheckStatus;
   detail: string;
 }
@@ -151,6 +157,7 @@ export interface EvalReport {
   groundingScore: number;
   approvalScore: number;
   missingInfoScore: number;
+  actionCompletenessScore: number;
   readinessScore: number;
   overallScore: number;
   readiness: "ready" | "needs-review" | "blocked";
