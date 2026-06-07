@@ -1,74 +1,121 @@
-export type ConnectorType = "gmail" | "calendar" | "crm" | "slack" | "docs";
+export type ToolName = "gmail" | "slack" | "crm" | "docs" | "calendar";
+
+export type WorkflowStepType =
+  | "trigger"
+  | "retrieve"
+  | "reason"
+  | "action"
+  | "approval"
+  | "eval";
+
+export type WorkflowStatus =
+  | "pending"
+  | "running"
+  | "completed"
+  | "blocked"
+  | "requires_approval";
+
+export type RiskLevel = "low" | "medium" | "high";
 
 export interface WorkflowStep {
   id: string;
-  label: string;
+  type: WorkflowStepType;
+  title: string;
   description: string;
-  status: "completed" | "running" | "pending" | "error";
-  connector: ConnectorType;
-  durationMs: number;
+  tool?: ToolName;
+  status: WorkflowStatus;
+  riskLevel: RiskLevel;
+  requiresApproval: boolean;
 }
+
+export interface WorkflowSummary {
+  title: string;
+  department: string;
+  persona: string;
+  riskLevel: RiskLevel;
+  automationPotential: string;
+  businessValue: string;
+  tools: ToolName[];
+  missingInfo: string[];
+  assumptions: string[];
+}
+
+export type WorkspaceSourceType =
+  | "email_thread"
+  | "calendar_event"
+  | "crm_record"
+  | "slack_thread"
+  | "knowledge_base_doc";
 
 export interface WorkspaceSource {
   id: string;
-  connector: ConnectorType;
+  tool: ToolName;
   title: string;
-  summary: string;
+  sourceType: WorkspaceSourceType;
+  author: string;
   timestamp: string;
-  relevance: number;
-  metadata: Record<string, string>;
+  snippet: string;
+  relevanceScore: number;
+  tags: string[];
 }
+
+export type TraceEventType =
+  | "request_parsed"
+  | "connector_search"
+  | "source_retrieved"
+  | "context_merged"
+  | "draft_prepared"
+  | "approval_gate"
+  | "eval_completed";
+
+export type TraceEventStatus = "success" | "warning" | "error";
 
 export interface TraceEvent {
   id: string;
+  stepId: string;
+  type: TraceEventType;
+  status: TraceEventStatus;
+  title: string;
+  description: string;
+  tool?: ToolName;
+  sources?: string[];
   timestamp: string;
-  type: "search" | "retrieve" | "analyze" | "draft" | "eval" | "compile";
-  label: string;
-  detail: string;
-  durationMs: number;
-  status: "success" | "warning" | "error";
 }
+
+export type DraftActionType =
+  | "email_draft"
+  | "crm_update_draft"
+  | "slack_update_draft"
+  | "calendar_event_draft";
 
 export interface DraftAction {
   id: string;
-  type: "email" | "crm" | "slack" | "calendar";
+  type: DraftActionType;
   title: string;
-  summary: string;
+  targetTool: ToolName;
   body: string;
-  status: "draft" | "approved" | "rejected";
-  recipient?: string;
-  metadata: Record<string, string>;
-}
-
-export interface EvalCheck {
-  id: string;
-  label: string;
-  status: "pass" | "warn" | "fail";
-  detail: string;
-  category: "accuracy" | "safety" | "completeness" | "tone" | "compliance";
+  requiresApproval: boolean;
+  approvalReason: string;
+  sourceIds: string[];
 }
 
 export interface EvalReport {
-  overallScore: number;
-  readiness: "ready" | "needs-review" | "blocked";
-  checks: EvalCheck[];
-  summary: string;
+  retrievalScore: number;
+  groundingScore: number;
+  approvalScore: number;
+  missingInfoScore: number;
+  readinessScore: number;
+  warnings: string[];
+  recommendations: string[];
 }
 
-export interface WorkflowSummaryData {
+export interface DemoRun {
   request: string;
-  stepsCount: number;
-  sourcesFound: number;
-  actionsGenerated: number;
-  totalDurationMs: number;
-  connectors: ConnectorType[];
-}
-
-export interface DemoWorkspaceData {
-  workflowSummary: WorkflowSummaryData;
-  steps: WorkflowStep[];
+  workflowSummary: WorkflowSummary;
+  workflowSteps: WorkflowStep[];
   sources: WorkspaceSource[];
-  trace: TraceEvent[];
-  actions: DraftAction[];
-  eval: EvalReport;
+  traceEvents: TraceEvent[];
+  draftActions: DraftAction[];
+  evalReport: EvalReport;
+  rawJson: Record<string, unknown>;
 }
