@@ -7,9 +7,10 @@ import {
   type CompiledWorkflowStep,
   type CompilerRiskLevel,
   type CompilerToolName,
+  type GeneratedSearchQuery,
 } from "./compiler-schema";
 
-const DEFAULT_MODEL = "gpt-4o-mini";
+const DEFAULT_MODEL = "gpt-4.1-mini";
 const ALL_TOOLS: CompilerToolName[] = [
   "gmail",
   "calendar",
@@ -17,6 +18,7 @@ const ALL_TOOLS: CompilerToolName[] = [
   "slack",
   "docs",
 ];
+const ALLOWED_TOOLS = new Set<CompilerToolName>(ALL_TOOLS);
 const RISKY_TOPIC_PATTERN =
   /\b(soc\s*2|soc2|security|pricing|price|discount|contract|nda|compliance|proposal)\b/i;
 const EXTERNAL_ACTION_PATTERN =
@@ -27,26 +29,45 @@ const ACTION_INTENT_PATTERN =
 const SYSTEM_PROMPT =
   "You are a workflow compiler for an AI WorkOS testing lab. Convert messy workplace requests into structured workflow plans. Do not execute tools. Do not invent completed actions. Mark approval gates and risks clearly.";
 
+export type CompileWorkflowResult =
+  | {
+      compiledWorkflow: CompiledWorkflow;
+      mode: "ai";
+    }
+  | {
+      compiledWorkflow: CompiledWorkflow;
+      mode: "fallback";
+      warning: "AI compiler failed, returned deterministic fallback.";
+    };
+
 export async function compileWorkflow(
   request: string,
-): Promise<CompiledWorkflow> {
+): Promise<CompileWorkflowResult> {
   if (!process.env.OPENAI_API_KEY) {
-    return getFallbackCompiledWorkflow(request);
+    return getFallbackCompileResult(request);
   }
 
-  const result = await generateText({
-    model: openai(process.env.OPENAI_MODEL ?? DEFAULT_MODEL),
-    output: Output.object({ schema: compiledWorkflowSchema }),
-    system: SYSTEM_PROMPT,
-    prompt: buildCompilerPrompt(request),
-    temperature: 0.2,
-  });
+  try {
+    const result = await generateText({
+      model: openai(process.env.OPENAI_MODEL ?? DEFAULT_MODEL),
+      output: Output.object({ schema: compiledWorkflowSchema }),
+      system: SYSTEM_PROMPT,
+      prompt: buildCompilerPrompt(request),
+      temperature: 0.2,
+    });
 
-  if (!result.output) {
-    throw new Error("Compiler returned no structured output.");
+    if (!result.output) {
+      throw new Error("Compiler returned no structured output.");
+    }
+
+    return {
+      compiledWorkflow: enforceCompilerRules(result.output),
+      mode: "ai",
+    };
+  } catch (error) {
+    console.error("[compile] AI compiler failed:", error);
+    return getFallbackCompileResult(request);
   }
-
-  return enforceCompilerRules(result.output);
 }
 
 export function getFallbackCompiledWorkflow(
@@ -87,6 +108,7 @@ export function getFallbackCompiledWorkflow(
         title: "Parse workplace request",
         description:
           "Identify the customer ask, requested topics, required seeded tools, draft outputs, and approval requirement.",
+        tool: null,
         goal: "Convert the messy request into an intended workflow plan.",
         dependsOn: [],
         requiresApproval: false,
@@ -146,6 +168,7 @@ export function getFallbackCompiledWorkflow(
         title: "Plan grounded response synthesis",
         description:
           "Compare the requested follow-up against retrieved sources and identify unresolved approval-sensitive gaps.",
+        tool: null,
         goal: "Prepare only source-grounded recommendations and call out missing information.",
         dependsOn: [
           "step-retrieve-email-context",
@@ -210,6 +233,7 @@ export function getFallbackCompiledWorkflow(
         title: "Require human approval",
         description:
           "Require review before any customer email, CRM update, Slack update, or calendar draft is used.",
+        tool: null,
         goal: "Prevent unapproved external communication or workspace changes.",
         dependsOn: [
           "step-action-draft-follow-up-email",
@@ -226,6 +250,7 @@ export function getFallbackCompiledWorkflow(
         title: "Plan eval and safety checks",
         description:
           "Plan checks for retrieval coverage, source grounding, approval coverage, missing information, and review readiness.",
+        tool: null,
         goal: "Verify the workflow remains draft-only, grounded, and approval-gated.",
         dependsOn: ["step-approval-review-drafts"],
         requiresApproval: false,
@@ -349,6 +374,9 @@ ${request}
 
 Rules:
 - Return only the object required by the schema.
+- Do not omit any fields. Every property in the schema must be present.
+- For steps that do not use a tool, set tool to null. Do not omit any fields.
+- For arrays with no items, return an empty array instead of omitting the field.
 - This is planning only. Do not say you searched, retrieved, sent, posted, created, scheduled, or updated anything.
 - Describe intended workflow steps using future/planning language.
 - Allowed tools: gmail, slack, crm, docs, calendar.
@@ -362,7 +390,10 @@ Rules:
 function enforceCompilerRules(workflow: CompiledWorkflow): CompiledWorkflow {
   const steps = workflow.steps.map(enforceStepRules);
   const approvalGates = workflow.approvalGates.map(enforceApprovalGateRules);
-  const tools = Array.from(new Set(workflow.tools));
+  const tools = uniqueValidTools(workflow.tools);
+  const generatedSearchQueries = ensureSearchQueries(
+    workflow.generatedSearchQueries,
+  );
   const hasHighRisk =
     workflow.riskLevel === "high" ||
     steps.some((step) => step.riskLevel === "high") ||
@@ -374,11 +405,12 @@ function enforceCompilerRules(workflow: CompiledWorkflow): CompiledWorkflow {
     riskLevel: hasHighRisk ? "high" : workflow.riskLevel,
     steps,
     approvalGates,
+    generatedSearchQueries,
   });
 }
 
 function enforceStepRules(step: CompiledWorkflowStep): CompiledWorkflowStep {
-  const text = `${step.title} ${step.description} ${step.goal}`;
+  const text = `${step.title} ${step.description ?? ""} ${step.goal}`;
   const isAction = step.type === "action";
   const needsApproval =
     isAction ||
@@ -388,18 +420,58 @@ function enforceStepRules(step: CompiledWorkflowStep): CompiledWorkflowStep {
 
   return {
     ...step,
+    tool: step.tool && ALLOWED_TOOLS.has(step.tool) ? step.tool : null,
     requiresApproval: step.requiresApproval || needsApproval,
     riskLevel: highestRisk(step.riskLevel, isRisky ? "high" : step.riskLevel),
   };
 }
 
 function enforceApprovalGateRules(gate: ApprovalGate): ApprovalGate {
-  const text = `${gate.title} ${gate.description} ${gate.reason}`;
+  const text = `${gate.title} ${gate.description ?? ""} ${gate.reason}`;
   const isRisky = RISKY_TOPIC_PATTERN.test(text);
+  const requiredForTools = uniqueValidTools(gate.requiredForTools);
 
   return {
     ...gate,
+    requiredForTools:
+      requiredForTools.length > 0 ? requiredForTools : ["gmail"],
     riskLevel: highestRisk(gate.riskLevel, isRisky ? "high" : gate.riskLevel),
+  };
+}
+
+function ensureSearchQueries(
+  queries: GeneratedSearchQuery[],
+): GeneratedSearchQuery[] {
+  const validQueries = queries.filter((query) => ALLOWED_TOOLS.has(query.tool));
+
+  if (validQueries.length > 0) {
+    return validQueries;
+  }
+
+  return [
+    {
+      id: "query-fallback-seeded-workspace",
+      tool: "docs",
+      query:
+        "SOC2 migration timeline pricing follow-up seeded workplace context",
+      purpose:
+        "Provide at least one seeded workspace retrieval query for the compiled workflow.",
+    },
+  ];
+}
+
+function uniqueValidTools(tools: CompilerToolName[]): CompilerToolName[] {
+  const validTools = tools.filter((tool) => ALLOWED_TOOLS.has(tool));
+  const uniqueTools = Array.from(new Set(validTools));
+
+  return uniqueTools.length > 0 ? uniqueTools : ALL_TOOLS;
+}
+
+function getFallbackCompileResult(request: string): CompileWorkflowResult {
+  return {
+    compiledWorkflow: getFallbackCompiledWorkflow(request),
+    mode: "fallback",
+    warning: "AI compiler failed, returned deterministic fallback.",
   };
 }
 
