@@ -26,6 +26,15 @@ interface EvalPanelProps {
 }
 
 export function EvalPanel({ report }: EvalPanelProps) {
+  const scoreBreakdown = [
+    { label: "Retrieval", value: report.retrievalScore },
+    { label: "Grounding", value: report.groundingScore },
+    { label: "Approval", value: report.approvalScore },
+    { label: "Missing info", value: report.missingInfoScore },
+    { label: "Actions", value: report.actionCompletenessScore },
+    { label: "Readiness", value: report.readinessScore },
+  ];
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
@@ -54,6 +63,19 @@ export function EvalPanel({ report }: EvalPanelProps) {
         <p className="mb-5 text-xs text-muted-foreground leading-relaxed">
           {report.summary}
         </p>
+        <div className="mb-5 grid grid-cols-2 gap-2 sm:grid-cols-3">
+          {scoreBreakdown.map((score) => (
+            <div
+              key={score.label}
+              className="rounded-md border border-border/60 px-3 py-2"
+            >
+              <p className="text-[10px] uppercase text-muted-foreground">
+                {score.label}
+              </p>
+              <p className="mt-1 text-sm font-semibold">{score.value}</p>
+            </div>
+          ))}
+        </div>
         <div className="space-y-3">
           {report.checks.map((check) => (
             <div key={check.id} className="flex items-start gap-3">
@@ -79,6 +101,36 @@ export function EvalPanel({ report }: EvalPanelProps) {
             </div>
           ))}
         </div>
+        {report.warnings.length > 0 && (
+          <div className="mt-5">
+            <p className="mb-2 text-xs font-medium">Warnings</p>
+            <div className="space-y-2">
+              {report.warnings.map((warning) => (
+                <p
+                  key={warning}
+                  className="text-xs leading-relaxed text-muted-foreground"
+                >
+                  {warning}
+                </p>
+              ))}
+            </div>
+          </div>
+        )}
+        {report.recommendations.length > 0 && (
+          <div className="mt-5">
+            <p className="mb-2 text-xs font-medium">Recommendations</p>
+            <div className="space-y-2">
+              {report.recommendations.map((recommendation) => (
+                <p
+                  key={recommendation}
+                  className="text-xs leading-relaxed text-muted-foreground"
+                >
+                  {recommendation}
+                </p>
+              ))}
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
