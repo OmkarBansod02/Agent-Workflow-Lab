@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { WorkflowInput } from "@/components/lab/WorkflowInput";
+import { CompiledWorkflowPanel } from "@/components/lab/CompiledWorkflowPanel";
 import { WorkflowSummary } from "@/components/lab/WorkflowSummary";
 import { ToolStepTimeline } from "@/components/lab/ToolStepTimeline";
 import { WorkspaceSourceCard } from "@/components/lab/WorkspaceSourceCard";
@@ -14,12 +15,63 @@ import { EvalPanel } from "@/components/lab/EvalPanel";
 import { JsonInspector } from "@/components/lab/JsonInspector";
 import { demoData } from "@/lib/demo-data";
 import type { DemoRun } from "@/lib/types";
+import type { CompiledWorkflow } from "@/lib/compiler-schema";
+
+const SEQUENCE_STEPS = [
+  { label: "AI compile", step: 1 },
+  { label: "Seeded workspace search", step: 2 },
+  { label: "Draft actions", step: 3 },
+  { label: "Eval report", step: 4 },
+] as const;
 
 export default function AppPage() {
   const [request, setRequest] = useState(demoData.request);
   const [run, setRun] = useState<DemoRun>(demoData);
+  const [compiledWorkflow, setCompiledWorkflow] =
+    useState<CompiledWorkflow | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isCompiling, setIsCompiling] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [compileError, setCompileError] = useState<string | null>(null);
+
+  async function handleCompile() {
+    const trimmedRequest = request.trim();
+
+    if (!trimmedRequest) {
+      setCompileError("Enter a workflow request before compiling.");
+      return;
+    }
+
+    setIsCompiling(true);
+    setCompileError(null);
+
+    try {
+      const response = await fetch("/api/compile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ request: trimmedRequest }),
+      });
+      const payload = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          typeof payload?.error === "string"
+            ? payload.error
+            : "Unable to compile workflow.",
+        );
+      }
+
+      setCompiledWorkflow(payload.compiledWorkflow as CompiledWorkflow);
+    } catch (compileErr) {
+      setCompileError(
+        compileErr instanceof Error
+          ? compileErr.message
+          : "Unable to compile workflow.",
+      );
+    } finally {
+      setIsCompiling(false);
+    }
+  }
 
   async function handleRun() {
     const trimmedRequest = request.trim();
@@ -35,9 +87,7 @@ export default function AppPage() {
     try {
       const response = await fetch("/api/run", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ request: trimmedRequest }),
       });
       const payload = await response.json();
@@ -83,14 +133,42 @@ export default function AppPage() {
 
       {/* Main content */}
       <main className="flex-1 mx-auto w-full max-w-5xl px-6 py-8 space-y-8">
+        {/* Visual sequence */}
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          {SEQUENCE_STEPS.map(({ label, step }, i) => (
+            <span key={step} className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1.5">
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-muted text-[10px] font-semibold">
+                  {step}
+                </span>
+                <span>{label}</span>
+              </span>
+              {i < SEQUENCE_STEPS.length - 1 && (
+                <span className="text-border">→</span>
+              )}
+            </span>
+          ))}
+        </div>
+
         {/* Input */}
         <WorkflowInput
           request={request}
           isLoading={isLoading}
+          isCompiling={isCompiling}
           error={error}
+          compileError={compileError}
           onRequestChange={setRequest}
+          onCompile={handleCompile}
           onRun={handleRun}
         />
+
+        {/* Compiled Workflow */}
+        {compiledWorkflow && (
+          <>
+            <Separator />
+            <CompiledWorkflowPanel workflow={compiledWorkflow} />
+          </>
+        )}
 
         <Separator />
 
@@ -119,8 +197,8 @@ export default function AppPage() {
       {/* Footer */}
       <footer className="border-t border-border/60 px-6 py-4">
         <p className="text-center text-xs text-muted-foreground">
-          Agent Workflow Lab - Phase 1 seeded workspace runner. All data is
-          seeded. No real tools are touched.
+          Agent Workflow Lab - Phase 2 compile + seeded workspace runner. All
+          data is seeded. No real tools are touched.
         </p>
       </footer>
     </div>
