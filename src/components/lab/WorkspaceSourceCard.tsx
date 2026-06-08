@@ -32,11 +32,11 @@ interface WorkspaceSourceCardProps {
 
 export function WorkspaceSourceCard({ sources }: WorkspaceSourceCardProps) {
   return (
-    <Card className="border-zinc-200 shadow-sm">
+    <Card className="border-white/[0.08] bg-[#0D0D0F]">
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle className="text-sm font-semibold text-zinc-900">Retrieved Workplace Sources</CardTitle>
-          <span className="text-[10px] font-mono text-zinc-400">{sources.length} results</span>
+          <CardTitle className="text-sm font-semibold text-zinc-100">Retrieved Workplace Sources</CardTitle>
+          <span className="text-[10px] font-mono text-[#71717A]">{sources.length} results</span>
         </div>
       </CardHeader>
       <CardContent>
@@ -44,10 +44,10 @@ export function WorkspaceSourceCard({ sources }: WorkspaceSourceCardProps) {
           {sources.map((src) => (
             <div
               key={src.id}
-              className={`rounded-lg border-l-2 ${connectorBorderClass[src.connector]} border border-zinc-200 bg-white p-3.5 space-y-2.5 shadow-sm`}
+              className={`rounded-lg border-l-2 ${connectorBorderClass[src.connector]} border border-white/[0.06] bg-[#111113] p-3.5 space-y-2.5`}
             >
               <div className="flex items-start justify-between gap-2">
-                <h4 className="text-sm font-medium leading-snug text-zinc-800">
+                <h4 className="text-sm font-medium leading-snug text-zinc-200">
                   {src.title}
                 </h4>
                 <Badge
@@ -57,7 +57,7 @@ export function WorkspaceSourceCard({ sources }: WorkspaceSourceCardProps) {
                   {connectorLabels[src.connector]}
                 </Badge>
               </div>
-              <p className="text-xs text-zinc-500 leading-relaxed">
+              <p className="text-xs text-[#A1A1AA] leading-relaxed">
                 {src.summary}
               </p>
 
@@ -67,7 +67,7 @@ export function WorkspaceSourceCard({ sources }: WorkspaceSourceCardProps) {
                   {src.tags.map((tag) => (
                     <span
                       key={tag}
-                      className="inline-flex items-center rounded-full bg-zinc-100 px-2 py-0.5 text-[10px] text-zinc-500 font-medium"
+                      className="inline-flex items-center rounded-full bg-[#1A1A1D] px-2 py-0.5 text-[10px] text-[#A1A1AA] font-medium"
                     >
                       {tag}
                     </span>
@@ -75,17 +75,17 @@ export function WorkspaceSourceCard({ sources }: WorkspaceSourceCardProps) {
                 </div>
               )}
 
-              <div className="flex items-center gap-3 text-[10px] text-zinc-400">
+              <div className="flex items-center gap-3 text-[10px] text-[#71717A]">
                 {Object.entries(src.metadata).map(([key, value]) => (
                   <span key={key}>
-                    <span className="font-medium text-zinc-500">{key}:</span>{" "}
+                    <span className="font-medium text-[#A1A1AA]">{key}:</span>{" "}
                     {value}
                   </span>
                 ))}
               </div>
 
-              <div className="flex items-center justify-between pt-1 border-t border-zinc-100">
-                <span className="text-[10px] text-zinc-400">
+              <div className="flex items-center justify-between pt-1 border-t border-white/[0.04]">
+                <span className="text-[10px] text-[#71717A]">
                   {new Date(src.timestamp).toLocaleDateString("en-US", {
                     month: "short",
                     day: "numeric",
@@ -113,10 +113,10 @@ function RelevanceIndicator({ score }: { score: number }) {
         : "bg-amber-500";
   return (
     <div className="flex items-center gap-2">
-      <div className="w-12 h-1.5 rounded-full bg-zinc-100 overflow-hidden">
+      <div className="w-12 h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
         <div className={`h-full rounded-full ${color}`} style={{ width: `${pct}%` }} />
       </div>
-      <span className="text-[10px] font-mono text-zinc-500 tabular-nums">{pct}%</span>
+      <span className="text-[10px] font-mono text-[#71717A] tabular-nums">{pct}%</span>
     </div>
   );
 }

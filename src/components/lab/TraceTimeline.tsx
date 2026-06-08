@@ -42,15 +42,15 @@ export function TraceTimeline({ events }: TraceTimelineProps) {
   const blockedCount = events.filter((e) => e.status === "blocked").length;
 
   return (
-    <div className="rounded-xl console-panel border overflow-hidden shadow-lg">
+    <div className="rounded-xl border border-white/[0.08] bg-[#0A0A0C] overflow-hidden shadow-lg shadow-violet-500/[0.03]">
       {/* Header */}
       <div className="flex items-center justify-between px-5 pt-4 pb-3">
         <div>
           <div className="flex items-center gap-2">
-            <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider">trace</span>
+            <span className="text-[10px] font-mono text-[#71717A] uppercase tracking-wider">trace</span>
             <h3 className="text-sm font-semibold text-zinc-100">Agent Trace</h3>
           </div>
-          <p className="mt-0.5 text-[11px] text-zinc-500 font-mono">
+          <p className="mt-0.5 text-[11px] text-[#71717A] font-mono">
             {events.length} spans · {(totalMs / 1000).toFixed(1)}s total
           </p>
         </div>
@@ -78,7 +78,7 @@ export function TraceTimeline({ events }: TraceTimelineProps) {
 
       <div className="px-5 pb-5">
         {/* Waterfall bar */}
-        <div className="mb-4 flex h-2 w-full overflow-hidden rounded-full bg-zinc-800">
+        <div className="mb-4 flex h-2 w-full overflow-hidden rounded-full bg-white/[0.04]">
           {events.map((e) => {
             const widthPct = (e.durationMs / totalMs) * 100;
             return (
@@ -99,7 +99,7 @@ export function TraceTimeline({ events }: TraceTimelineProps) {
             return (
               <div
                 key={e.id}
-                className={`flex items-start gap-3 rounded-md border-l-2 ${style.border} console-panel-subtle px-3 py-2.5 transition-colors hover:bg-zinc-800/80`}
+                className={`flex items-start gap-3 rounded-md border-l-2 ${style.border} bg-[#111113] border border-white/[0.04] px-3 py-2.5 transition-colors hover:bg-[#17171A]`}
               >
                 <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${style.dot}`} />
                 <div className="min-w-0 flex-1">
@@ -112,20 +112,20 @@ export function TraceTimeline({ events }: TraceTimelineProps) {
                       {e.type}
                     </Badge>
                     {e.tool && (
-                      <span className="inline-flex items-center gap-0.5 rounded border border-zinc-700 bg-zinc-800 px-1.5 py-0 text-[10px] font-mono text-zinc-400">
+                      <span className="inline-flex items-center gap-0.5 rounded border border-white/[0.08] bg-[#17171A] px-1.5 py-0 text-[10px] font-mono text-[#A1A1AA]">
                         {toolIcons[e.tool] || "·"} {e.tool}
                       </span>
                     )}
                     {e.sources && e.sources.length > 0 && (
-                      <span className="text-[10px] text-zinc-500 font-mono">
+                      <span className="text-[10px] text-[#71717A] font-mono">
                         {e.sources.length} source{e.sources.length !== 1 ? "s" : ""}
                       </span>
                     )}
-                    <span className="ml-auto text-[10px] font-mono text-zinc-500 tabular-nums">
+                    <span className="ml-auto text-[10px] font-mono text-[#71717A] tabular-nums">
                       {e.durationMs}ms
                     </span>
                   </div>
-                  <p className="mt-0.5 text-xs text-zinc-500 leading-relaxed">
+                  <p className="mt-0.5 text-xs text-[#71717A] leading-relaxed">
                     {e.detail}
                   </p>
                 </div>
