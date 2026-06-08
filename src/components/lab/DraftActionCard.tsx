@@ -44,19 +44,19 @@ interface DraftActionCardProps {
 
 export function DraftActionCard({ actions }: DraftActionCardProps) {
   return (
-    <Card className="border-zinc-200 shadow-sm">
+    <Card className="border-white/[0.08] bg-[#0D0D0F]">
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="text-sm font-semibold text-zinc-900">Draft Actions</CardTitle>
-        <Badge className="text-[10px] font-medium uppercase tracking-wide bg-amber-100 text-amber-700 border border-amber-200 hover:bg-amber-100">
+        <CardTitle className="text-sm font-semibold text-zinc-100">Draft Actions</CardTitle>
+        <Badge className="text-[10px] font-medium uppercase tracking-wide bg-amber-500/15 text-amber-400 border border-amber-500/25 hover:bg-amber-500/15">
           Approval required
         </Badge>
       </CardHeader>
       <CardContent>
         {/* Approval warning banner */}
-        <div className="mb-5 flex items-center gap-3 rounded-lg border border-amber-300/60 bg-amber-50 px-4 py-3">
-          <ShieldAlert className="h-4 w-4 text-amber-600 shrink-0" />
-          <p className="text-xs text-amber-800">
-            All actions are <span className="font-semibold">drafts only</span> — nothing is sent, posted, or created. Each action needs explicit approval before execution.
+        <div className="mb-5 flex items-center gap-3 rounded-lg border border-amber-500/20 bg-amber-500/10 px-4 py-3">
+          <ShieldAlert className="h-4 w-4 text-amber-400 shrink-0" />
+          <p className="text-xs text-amber-300">
+            All actions are <span className="font-semibold text-amber-200">drafts only</span> — nothing is sent, posted, or created. Each action needs explicit approval before execution.
           </p>
         </div>
 
@@ -65,32 +65,32 @@ export function DraftActionCard({ actions }: DraftActionCardProps) {
             <AccordionItem
               key={action.id}
               value={action.id}
-              className="rounded-lg border border-zinc-200 px-4 shadow-sm"
+              className="rounded-lg border border-white/[0.08] px-4"
             >
               <AccordionTrigger className="py-3 hover:no-underline">
                 <div className="flex items-center gap-3 text-left w-full">
-                  <span className={`text-base shrink-0 inline-flex items-center justify-center h-7 w-7 rounded-md ${toolBadgeClass[action.targetTool] ?? "bg-zinc-100"}`}>
+                  <span className={`text-base shrink-0 inline-flex items-center justify-center h-7 w-7 rounded-md ${toolBadgeClass[action.targetTool] ?? "bg-[#17171A]"}`}>
                     {toolIcons[action.targetTool] || "·"}
                   </span>
                   <Badge
                     variant="outline"
-                    className="shrink-0 text-[10px] px-1.5 py-0 border-zinc-200 text-zinc-500"
+                    className="shrink-0 text-[10px] px-1.5 py-0 border-white/[0.08] text-[#A1A1AA]"
                   >
                     {typeLabels[action.type]}
                   </Badge>
                   <div className="min-w-0 flex-1">
-                    <span className="text-sm font-medium text-zinc-800">{action.title}</span>
-                    <p className="text-xs text-zinc-500 mt-0.5 truncate">
+                    <span className="text-sm font-medium text-zinc-200">{action.title}</span>
+                    <p className="text-xs text-[#71717A] mt-0.5 truncate">
                       {action.summary}
                     </p>
                   </div>
                   <div className="ml-auto flex items-center gap-2 shrink-0">
-                    <Badge className="text-[10px] px-2 py-0.5 bg-rose-100 text-rose-700 border border-rose-200 font-semibold hover:bg-rose-100">
+                    <Badge className="text-[10px] px-2 py-0.5 bg-amber-500/15 text-amber-400 border border-amber-500/25 font-semibold hover:bg-amber-500/15">
                       Needs approval
                     </Badge>
                     <Badge
                       variant="outline"
-                      className="text-[10px] px-1.5 py-0 border-zinc-300 text-zinc-500"
+                      className="text-[10px] px-1.5 py-0 border-white/[0.08] text-[#A1A1AA]"
                     >
                       Draft only
                     </Badge>
@@ -100,21 +100,21 @@ export function DraftActionCard({ actions }: DraftActionCardProps) {
               <AccordionContent>
                 <div className="pb-2 space-y-3">
                   {action.approvalReason && (
-                    <div className="text-xs text-amber-800 bg-amber-50 rounded-md px-3 py-2 border border-amber-200">
-                      <span className="font-semibold">Approval reason:</span> {action.approvalReason}
+                    <div className="text-xs text-amber-300 bg-amber-500/10 rounded-md px-3 py-2 border border-amber-500/20">
+                      <span className="font-semibold text-amber-200">Approval reason:</span> {action.approvalReason}
                     </div>
                   )}
                   {action.recipient && (
-                    <p className="text-xs text-zinc-500">
-                      <span className="font-medium text-zinc-600">To:</span>{" "}
+                    <p className="text-xs text-[#A1A1AA]">
+                      <span className="font-medium text-zinc-300">To:</span>{" "}
                       {action.recipient}
                     </p>
                   )}
-                  <pre className="whitespace-pre-wrap rounded-lg bg-zinc-50 border border-zinc-200 p-4 text-xs leading-relaxed font-sans text-zinc-700">
+                  <pre className="whitespace-pre-wrap rounded-lg bg-[#0A0A0C] border border-white/[0.06] p-4 text-xs leading-relaxed font-sans text-zinc-300">
                     {action.body}
                   </pre>
                   {action.sourceIds.length > 0 && (
-                    <p className="text-[10px] text-zinc-400 font-mono">
+                    <p className="text-[10px] text-[#71717A] font-mono">
                       Based on {action.sourceIds.length} source{action.sourceIds.length !== 1 ? "s" : ""}
                     </p>
                   )}
