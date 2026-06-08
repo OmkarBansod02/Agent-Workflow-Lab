@@ -10,26 +10,32 @@ const statusIcon: Record<EvalCheck["status"], string> = {
 };
 
 const statusColor: Record<EvalCheck["status"], string> = {
-  pass: "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10",
-  warn: "text-amber-600 dark:text-amber-400 bg-amber-500/10",
-  fail: "text-red-600 dark:text-red-400 bg-red-500/10",
+  pass: "text-emerald-700 bg-emerald-100 border-emerald-200",
+  warn: "text-amber-700 bg-amber-100 border-amber-200",
+  fail: "text-rose-700 bg-rose-100 border-rose-200",
 };
 
-const readinessConfig: Record<EvalReport["readiness"], { bg: string; ring: string; label: string }> = {
+const readinessConfig: Record<EvalReport["readiness"], { bg: string; ring: string; label: string; scoreBg: string; scoreText: string }> = {
   ready: {
-    bg: "bg-emerald-500/10",
-    ring: "ring-emerald-500/30",
+    bg: "bg-emerald-50",
+    ring: "ring-emerald-200",
     label: "Ready for review",
+    scoreBg: "bg-emerald-500",
+    scoreText: "text-emerald-700",
   },
   "needs-review": {
-    bg: "bg-amber-500/10",
-    ring: "ring-amber-500/30",
+    bg: "bg-amber-50",
+    ring: "ring-amber-200",
     label: "Needs review",
+    scoreBg: "bg-amber-500",
+    scoreText: "text-amber-700",
   },
   blocked: {
-    bg: "bg-red-500/10",
-    ring: "ring-red-500/30",
+    bg: "bg-rose-50",
+    ring: "ring-rose-200",
     label: "Blocked — unsafe to proceed",
+    scoreBg: "bg-rose-500",
+    scoreText: "text-rose-700",
   },
 };
 
@@ -50,27 +56,46 @@ export function EvalPanel({ report }: EvalPanelProps) {
   ];
 
   return (
-    <Card>
+    <Card className="border-zinc-200 shadow-sm">
       <CardHeader className="flex flex-row items-center justify-between pb-4">
-        <CardTitle className="text-base">Eval / Safety Report</CardTitle>
-        <Badge
-          variant="secondary"
-          className={`text-xs border-0 font-medium ${readiness.bg}`}
-        >
+        <CardTitle className="text-sm font-semibold text-zinc-900">Eval / Safety Report</CardTitle>
+        <Badge className={`text-xs font-semibold border ${readiness.bg} ${readiness.scoreText} ${readiness.ring.replace("ring-", "border-")} hover:${readiness.bg}`}>
           {readiness.label}
         </Badge>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Readiness score hero */}
-        <div className={`rounded-lg ${readiness.bg} ring-1 ${readiness.ring} px-5 py-4`}>
-          <div className="flex items-center gap-5">
+        <div className={`rounded-xl ${readiness.bg} ring-1 ${readiness.ring} px-6 py-5`}>
+          <div className="flex items-center gap-6">
             <div className="text-center">
-              <p className="text-4xl font-bold tracking-tight">{report.overallScore}</p>
-              <p className="text-[11px] text-muted-foreground mt-0.5">/ 100</p>
+              <div className="relative inline-flex items-center justify-center">
+                <svg className="h-20 w-20 -rotate-90" viewBox="0 0 80 80">
+                  <circle
+                    cx="40" cy="40" r="34"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="6"
+                    className="text-zinc-200"
+                  />
+                  <circle
+                    cx="40" cy="40" r="34"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="6"
+                    strokeLinecap="round"
+                    strokeDasharray={`${(report.overallScore / 100) * 213.6} 213.6`}
+                    className={readiness.scoreText}
+                  />
+                </svg>
+                <span className="absolute text-xl font-bold tracking-tight text-zinc-900">
+                  {report.overallScore}
+                </span>
+              </div>
+              <p className="text-[10px] text-zinc-400 mt-1 font-mono">/ 100</p>
             </div>
             <div className="flex-1">
               <Progress value={report.overallScore} className="h-2.5" />
-              <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
+              <p className="mt-2.5 text-xs text-zinc-600 leading-relaxed">
                 {report.summary}
               </p>
             </div>
@@ -79,21 +104,26 @@ export function EvalPanel({ report }: EvalPanelProps) {
 
         {/* Score breakdown grid */}
         <div>
-          <p className="mb-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+          <p className="mb-3 text-[10px] font-medium font-mono text-zinc-400 uppercase tracking-wider">
             Score Breakdown
           </p>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
             {scoreBreakdown.map((score) => (
               <div
                 key={score.label}
-                className="rounded-md border border-border/60 px-3 py-2.5 bg-muted/20"
+                className="rounded-lg border border-zinc-200 px-3 py-2.5 bg-white"
               >
-                <p className="text-[10px] uppercase text-muted-foreground tracking-wide">
+                <p className="text-[10px] uppercase text-zinc-400 tracking-wide font-mono">
                   {score.label}
                 </p>
                 <div className="mt-1.5 flex items-center gap-2">
-                  <p className="text-sm font-semibold tabular-nums">{score.value}</p>
-                  <Progress value={score.value} className="flex-1 h-1.5" />
+                  <p className="text-sm font-bold tabular-nums text-zinc-900">{score.value}</p>
+                  <div className="flex-1 h-1.5 rounded-full bg-zinc-100 overflow-hidden">
+                    <div
+                      className={`h-full rounded-full ${getScoreColor(score.value)}`}
+                      style={{ width: `${score.value}%` }}
+                    />
+                  </div>
                 </div>
               </div>
             ))}
@@ -102,31 +132,31 @@ export function EvalPanel({ report }: EvalPanelProps) {
 
         {/* Checks */}
         <div>
-          <p className="mb-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+          <p className="mb-3 text-[10px] font-medium font-mono text-zinc-400 uppercase tracking-wider">
             Safety Checks
           </p>
           <div className="space-y-2">
             {report.checks.map((check) => (
               <div
                 key={check.id}
-                className="flex items-start gap-3 rounded-md border border-border/40 px-3 py-2.5"
+                className="flex items-start gap-3 rounded-lg border border-zinc-200 px-3.5 py-2.5"
               >
                 <span
-                  className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded text-[11px] font-bold ${statusColor[check.status]}`}
+                  className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold border ${statusColor[check.status]}`}
                 >
                   {statusIcon[check.status]}
                 </span>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium">{check.label}</span>
+                    <span className="text-sm font-medium text-zinc-800">{check.label}</span>
                     <Badge
                       variant="outline"
-                      className="text-[10px] px-1.5 py-0"
+                      className="text-[10px] px-1.5 py-0 border-zinc-200 text-zinc-500"
                     >
                       {check.category}
                     </Badge>
                   </div>
-                  <p className="mt-0.5 text-xs text-muted-foreground leading-relaxed">
+                  <p className="mt-0.5 text-xs text-zinc-500 leading-relaxed">
                     {check.detail}
                   </p>
                 </div>
@@ -137,15 +167,15 @@ export function EvalPanel({ report }: EvalPanelProps) {
 
         {/* Warnings */}
         {report.warnings.length > 0 && (
-          <div className="rounded-md border border-amber-500/30 bg-amber-500/5 px-4 py-3">
-            <p className="mb-2 text-xs font-medium text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
+          <div className="rounded-lg border border-amber-300/60 bg-amber-50 px-4 py-3.5">
+            <p className="mb-2 text-xs font-semibold text-amber-700 flex items-center gap-1.5">
               <span>⚠</span> Warnings
             </p>
             <ul className="space-y-1.5">
               {report.warnings.map((warning) => (
                 <li
                   key={warning}
-                  className="text-xs leading-relaxed text-muted-foreground pl-4 relative before:absolute before:left-1.5 before:top-[7px] before:h-1 before:w-1 before:rounded-full before:bg-amber-500/50"
+                  className="text-xs leading-relaxed text-amber-800 pl-4 relative before:absolute before:left-1.5 before:top-[7px] before:h-1 before:w-1 before:rounded-full before:bg-amber-400"
                 >
                   {warning}
                 </li>
@@ -156,15 +186,15 @@ export function EvalPanel({ report }: EvalPanelProps) {
 
         {/* Recommendations */}
         {report.recommendations.length > 0 && (
-          <div className="rounded-md border border-border/60 bg-muted/20 px-4 py-3">
-            <p className="mb-2 text-xs font-medium text-muted-foreground">
+          <div className="rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-3.5">
+            <p className="mb-2 text-xs font-semibold text-zinc-700">
               Recommendations
             </p>
             <ul className="space-y-1.5">
               {report.recommendations.map((rec) => (
                 <li
                   key={rec}
-                  className="text-xs leading-relaxed text-muted-foreground pl-4 relative before:absolute before:left-1.5 before:top-[7px] before:h-1 before:w-1 before:rounded-full before:bg-muted-foreground/40"
+                  className="text-xs leading-relaxed text-zinc-600 pl-4 relative before:absolute before:left-1.5 before:top-[7px] before:h-1 before:w-1 before:rounded-full before:bg-zinc-400"
                 >
                   {rec}
                 </li>
@@ -175,4 +205,11 @@ export function EvalPanel({ report }: EvalPanelProps) {
       </CardContent>
     </Card>
   );
+}
+
+function getScoreColor(value: number): string {
+  if (value >= 80) return "bg-emerald-500";
+  if (value >= 60) return "bg-blue-500";
+  if (value >= 40) return "bg-amber-500";
+  return "bg-rose-500";
 }

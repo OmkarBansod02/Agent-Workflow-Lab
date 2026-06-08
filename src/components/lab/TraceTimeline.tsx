@@ -1,39 +1,26 @@
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { TraceEvent } from "@/lib/types";
 
-const statusStyles: Record<TraceEvent["status"], { dot: string; border: string; label: string }> = {
-  success: {
-    dot: "bg-emerald-500",
-    border: "border-l-emerald-500/60",
-    label: "Success",
-  },
-  warning: {
-    dot: "bg-amber-500",
-    border: "border-l-amber-500/60",
-    label: "Warning",
-  },
-  blocked: {
-    dot: "bg-red-500",
-    border: "border-l-red-500/60",
-    label: "Blocked",
-  },
+const statusStyles: Record<TraceEvent["status"], { dot: string; border: string }> = {
+  success: { dot: "bg-emerald-400", border: "border-l-emerald-400/60" },
+  warning: { dot: "bg-amber-400", border: "border-l-amber-400/60" },
+  blocked: { dot: "bg-rose-400", border: "border-l-rose-400/60" },
 };
 
 const typeColors: Record<TraceEvent["type"], string> = {
-  request_parsed: "bg-cyan-500/10 text-cyan-700 dark:text-cyan-400",
-  connector_search: "bg-blue-500/10 text-blue-700 dark:text-blue-400",
-  source_retrieved: "bg-violet-500/10 text-violet-700 dark:text-violet-400",
-  context_merged: "bg-amber-500/10 text-amber-700 dark:text-amber-400",
-  draft_prepared: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
-  approval_gate: "bg-cyan-500/10 text-cyan-700 dark:text-cyan-400",
-  eval_completed: "bg-rose-500/10 text-rose-700 dark:text-rose-400",
-  search: "bg-blue-500/10 text-blue-700 dark:text-blue-400",
-  retrieve: "bg-violet-500/10 text-violet-700 dark:text-violet-400",
-  analyze: "bg-amber-500/10 text-amber-700 dark:text-amber-400",
-  draft: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
-  eval: "bg-rose-500/10 text-rose-700 dark:text-rose-400",
-  compile: "bg-cyan-500/10 text-cyan-700 dark:text-cyan-400",
+  request_parsed: "bg-cyan-500/15 text-cyan-300",
+  connector_search: "bg-blue-500/15 text-blue-300",
+  source_retrieved: "bg-violet-500/15 text-violet-300",
+  context_merged: "bg-amber-500/15 text-amber-300",
+  draft_prepared: "bg-emerald-500/15 text-emerald-300",
+  approval_gate: "bg-cyan-500/15 text-cyan-300",
+  eval_completed: "bg-rose-500/15 text-rose-300",
+  search: "bg-blue-500/15 text-blue-300",
+  retrieve: "bg-violet-500/15 text-violet-300",
+  analyze: "bg-amber-500/15 text-amber-300",
+  draft: "bg-emerald-500/15 text-emerald-300",
+  eval: "bg-rose-500/15 text-rose-300",
+  compile: "bg-cyan-500/15 text-cyan-300",
 };
 
 const toolIcons: Record<string, string> = {
@@ -55,38 +42,43 @@ export function TraceTimeline({ events }: TraceTimelineProps) {
   const blockedCount = events.filter((e) => e.status === "blocked").length;
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between pb-3">
+    <div className="rounded-xl console-panel border overflow-hidden shadow-lg">
+      {/* Header */}
+      <div className="flex items-center justify-between px-5 pt-4 pb-3">
         <div>
-          <CardTitle className="text-base">Agent Trace</CardTitle>
-          <p className="mt-1 text-[11px] text-muted-foreground">
-            {events.length} spans · {(totalMs / 1000).toFixed(1)}s
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider">trace</span>
+            <h3 className="text-sm font-semibold text-zinc-100">Agent Trace</h3>
+          </div>
+          <p className="mt-0.5 text-[11px] text-zinc-500 font-mono">
+            {events.length} spans · {(totalMs / 1000).toFixed(1)}s total
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           {successCount > 0 && (
-            <span className="inline-flex items-center gap-1 text-[10px] text-emerald-600 dark:text-emerald-400">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+            <span className="inline-flex items-center gap-1 text-[10px] text-emerald-400 font-mono">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
               {successCount}
             </span>
           )}
           {warningCount > 0 && (
-            <span className="inline-flex items-center gap-1 text-[10px] text-amber-600 dark:text-amber-400">
-              <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+            <span className="inline-flex items-center gap-1 text-[10px] text-amber-400 font-mono">
+              <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
               {warningCount}
             </span>
           )}
           {blockedCount > 0 && (
-            <span className="inline-flex items-center gap-1 text-[10px] text-red-600 dark:text-red-400">
-              <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
+            <span className="inline-flex items-center gap-1 text-[10px] text-rose-400 font-mono">
+              <span className="h-1.5 w-1.5 rounded-full bg-rose-400" />
               {blockedCount}
             </span>
           )}
         </div>
-      </CardHeader>
-      <CardContent>
+      </div>
+
+      <div className="px-5 pb-5">
         {/* Waterfall bar */}
-        <div className="mb-5 flex h-2.5 w-full overflow-hidden rounded-full bg-muted/80">
+        <div className="mb-4 flex h-2 w-full overflow-hidden rounded-full bg-zinc-800">
           {events.map((e) => {
             const widthPct = (e.durationMs / totalMs) * 100;
             return (
@@ -107,14 +99,12 @@ export function TraceTimeline({ events }: TraceTimelineProps) {
             return (
               <div
                 key={e.id}
-                className={`flex items-start gap-3 rounded-md border-l-2 ${style.border} bg-muted/20 px-3 py-2.5 transition-colors hover:bg-muted/40`}
+                className={`flex items-start gap-3 rounded-md border-l-2 ${style.border} console-panel-subtle px-3 py-2.5 transition-colors hover:bg-zinc-800/80`}
               >
-                {/* Status dot */}
                 <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${style.dot}`} />
-
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-sm font-medium leading-tight">{e.label}</span>
+                    <span className="text-sm font-medium leading-tight text-zinc-200">{e.label}</span>
                     <Badge
                       variant="secondary"
                       className={`text-[10px] px-1.5 py-0 border-0 ${typeColors[e.type]}`}
@@ -122,20 +112,20 @@ export function TraceTimeline({ events }: TraceTimelineProps) {
                       {e.type}
                     </Badge>
                     {e.tool && (
-                      <Badge variant="outline" className="text-[10px] px-1.5 py-0 gap-0.5 font-mono">
+                      <span className="inline-flex items-center gap-0.5 rounded border border-zinc-700 bg-zinc-800 px-1.5 py-0 text-[10px] font-mono text-zinc-400">
                         {toolIcons[e.tool] || "·"} {e.tool}
-                      </Badge>
+                      </span>
                     )}
                     {e.sources && e.sources.length > 0 && (
-                      <span className="text-[10px] text-muted-foreground font-mono">
+                      <span className="text-[10px] text-zinc-500 font-mono">
                         {e.sources.length} source{e.sources.length !== 1 ? "s" : ""}
                       </span>
                     )}
-                    <span className="ml-auto text-[10px] font-mono text-muted-foreground tabular-nums">
+                    <span className="ml-auto text-[10px] font-mono text-zinc-500 tabular-nums">
                       {e.durationMs}ms
                     </span>
                   </div>
-                  <p className="mt-0.5 text-xs text-muted-foreground leading-relaxed">
+                  <p className="mt-0.5 text-xs text-zinc-500 leading-relaxed">
                     {e.detail}
                   </p>
                 </div>
@@ -143,8 +133,8 @@ export function TraceTimeline({ events }: TraceTimelineProps) {
             );
           })}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
 
@@ -152,7 +142,7 @@ function getBarColor(status: TraceEvent["status"]): string {
   const map: Record<TraceEvent["status"], string> = {
     success: "bg-emerald-500/80",
     warning: "bg-amber-500/80",
-    blocked: "bg-red-500/80",
+    blocked: "bg-rose-500/80",
   };
   return map[status];
 }
