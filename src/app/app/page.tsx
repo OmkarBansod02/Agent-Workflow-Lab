@@ -120,47 +120,51 @@ export default function AppPage() {
 
   return (
     <div className="flex flex-col flex-1 min-h-screen">
-      {/* Header */}
-      <header className="flex items-center justify-between px-6 py-3 border-b border-border/60">
-        <div className="flex items-center gap-4">
-          <Link
-            href="/"
-            className="text-sm font-semibold tracking-tight hover:text-muted-foreground transition-colors"
-          >
-            Agent Workflow Lab
-          </Link>
-          <Separator orientation="vertical" className="h-4" />
-          <span className="text-sm text-muted-foreground">Demo Workspace</span>
+      {/* Command-center header */}
+      <header className="console-panel border-b">
+        <div className="flex items-center justify-between px-6 py-3">
+          <div className="flex items-center gap-4">
+            <Link
+              href="/"
+              className="text-sm font-semibold tracking-tight text-zinc-100 hover:text-white transition-colors"
+            >
+              Agent Workflow Lab
+            </Link>
+            <Separator orientation="vertical" className="h-4 bg-zinc-700" />
+            <span className="text-xs text-zinc-400 font-mono">Demo Workspace</span>
+          </div>
+          <Badge className="text-[10px] font-mono bg-zinc-800 text-zinc-300 border border-zinc-700 hover:bg-zinc-800">
+            Demo workspace: seeded workplace data
+          </Badge>
         </div>
-        <Badge variant="secondary" className="text-xs">
-          Demo workspace: seeded workplace data
-        </Badge>
+        <div className="px-6 pb-3">
+          <p className="text-[11px] text-zinc-500 leading-relaxed">
+            <span className="text-zinc-400 font-medium">How it works:</span>{" "}
+            AI plans the workflow. Deterministic runner executes against seeded workspace data. Eval checks safety before any action.
+          </p>
+        </div>
       </header>
 
       {/* Main content */}
       <main className="flex-1 mx-auto w-full max-w-5xl px-6 py-8 space-y-8">
-        {/* Architecture explanation */}
-        <div className="rounded-lg border border-border/60 bg-muted/30 px-4 py-3">
-          <p className="text-xs text-muted-foreground leading-relaxed">
-            <span className="font-medium text-foreground/80">How it works:</span>{" "}
-            AI plans the workflow. Deterministic runner executes against seeded workspace data. Eval checks safety before any action.
-          </p>
-        </div>
-
-        {/* Visual sequence */}
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+        {/* 4-step pipeline */}
+        <div className="flex items-center justify-between rounded-lg border border-zinc-200 bg-white px-5 py-3 shadow-sm">
           {SEQUENCE_STEPS.map(({ label, step }, i) => (
-            <span key={step} className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1.5">
-                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-muted text-[10px] font-semibold">
+            <div key={step} className="flex items-center gap-3 flex-1">
+              <div className="flex items-center gap-2.5">
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-zinc-900 text-[11px] font-semibold font-mono text-white">
                   {step}
                 </span>
-                <span>{label}</span>
-              </span>
+                <span className="text-sm font-medium text-zinc-700">{label}</span>
+              </div>
               {i < SEQUENCE_STEPS.length - 1 && (
-                <span className="text-border">→</span>
+                <div className="flex-1 flex items-center justify-center px-2">
+                  <div className="h-px flex-1 bg-zinc-200" />
+                  <span className="px-2 text-zinc-300 text-xs">→</span>
+                  <div className="h-px flex-1 bg-zinc-200" />
+                </div>
               )}
-            </span>
+            </div>
           ))}
         </div>
 
@@ -179,35 +183,35 @@ export default function AppPage() {
         {/* Compiled Workflow */}
         {compiledWorkflow && (
           <>
-            <Separator />
+            <Separator className="bg-zinc-200" />
             <CompiledWorkflowPanel workflow={compiledWorkflow} />
           </>
         )}
 
         {/* Run mode info */}
-        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+        <div className="flex items-center gap-3 text-xs text-zinc-500">
           <span>
             Runner uses the compiled AI plan when available, then executes
             deterministically against the seeded workspace.
           </span>
           {run.rawJson.mode === "compiled-workflow" && (
-            <Badge variant="outline" className="text-[10px] shrink-0">
+            <Badge variant="outline" className="text-[10px] shrink-0 border-blue-200 text-blue-600 bg-blue-50">
               Run mode: compiled AI plan
             </Badge>
           )}
           {run.rawJson.mode === "request-only" && (
-            <Badge variant="outline" className="text-[10px] shrink-0">
+            <Badge variant="outline" className="text-[10px] shrink-0 border-zinc-300 text-zinc-600">
               Run mode: request-only seeded runner
             </Badge>
           )}
         </div>
 
-        <Separator />
+        <Separator className="bg-zinc-200" />
 
         {/* Workflow Summary */}
         <WorkflowSummary data={run.workflowSummary} />
 
-        {/* Two-column layout for timeline + sources */}
+        {/* Two-column layout for timeline + trace */}
         <div className="grid gap-6 lg:grid-cols-2">
           <ToolStepTimeline steps={run.steps} />
           <TraceTimeline events={run.trace} />
@@ -227,9 +231,9 @@ export default function AppPage() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-border/60 px-6 py-4">
-        <p className="text-center text-xs text-muted-foreground">
-          Agent Workflow Lab - Phase 2 compile + seeded workspace runner. All
+      <footer className="border-t border-zinc-200 bg-zinc-50/50 px-6 py-4">
+        <p className="text-center text-xs text-zinc-400">
+          Agent Workflow Lab — compile + seeded workspace runner. All
           data is seeded. No real tools are touched.
         </p>
       </footer>
