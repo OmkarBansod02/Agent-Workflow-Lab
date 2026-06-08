@@ -24,9 +24,9 @@ interface WorkflowSummaryProps {
 
 export function WorkflowSummary({ data }: WorkflowSummaryProps) {
   return (
-    <Card className="border-white/[0.08] bg-[#0D0D0F]">
+    <Card className="border-white/[0.08] bg-[#1B1A18]">
       <CardHeader>
-        <CardTitle className="text-sm font-semibold text-zinc-100">Workflow Summary</CardTitle>
+        <CardTitle className="text-sm font-semibold text-stone-100">Workflow Summary</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -49,9 +49,9 @@ export function WorkflowSummary({ data }: WorkflowSummaryProps) {
 
 function Stat({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="rounded-lg bg-[#111113] border border-white/[0.06] px-3.5 py-3">
-      <p className="text-2xl font-bold tracking-tight text-[#F5F5F5]">{value}</p>
-      <p className="text-[10px] font-mono text-[#71717A] uppercase tracking-wider mt-0.5">{label}</p>
+    <div className="rounded-lg bg-[#201F1D] border border-white/[0.06] px-3.5 py-3">
+      <p className="text-2xl font-bold tracking-tight text-[#F5F2ED]">{value}</p>
+      <p className="text-[10px] font-mono text-[#78716C] uppercase tracking-wider mt-0.5">{label}</p>
     </div>
   );
 }

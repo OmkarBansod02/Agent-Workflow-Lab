@@ -121,25 +121,25 @@ export default function AppPage() {
   return (
     <div className="flex flex-col flex-1 min-h-screen">
       {/* Command-center header */}
-      <header className="border-b border-white/[0.08] bg-[#0A0A0C]">
+      <header className="warm-header-bg border-b border-white/[0.08] bg-[#131210]">
         <div className="flex items-center justify-between px-6 py-3">
           <div className="flex items-center gap-4">
             <Link
               href="/"
-              className="text-sm font-semibold tracking-tight text-zinc-100 hover:text-white transition-colors"
+              className="text-sm font-semibold tracking-tight text-stone-100 hover:text-white transition-colors"
             >
               Agent Workflow Lab
             </Link>
             <Separator orientation="vertical" className="h-4 bg-white/[0.08]" />
-            <span className="text-xs text-[#71717A] font-mono">Demo Workspace</span>
+            <span className="text-xs text-[#78716C] font-mono">Demo Workspace</span>
           </div>
-          <Badge className="text-[10px] font-mono bg-[#17171A] text-zinc-400 border border-white/[0.08] hover:bg-[#17171A]">
+          <Badge className="text-[10px] font-mono bg-[#FF5A2A]/12 text-[#FF6A3D] border border-[#FF5A2A]/25 hover:bg-[#FF5A2A]/12">
             Demo workspace: seeded workplace data
           </Badge>
         </div>
         <div className="px-6 pb-3">
-          <p className="text-[11px] text-[#71717A] leading-relaxed">
-            <span className="text-[#A1A1AA] font-medium">How it works:</span>{" "}
+          <p className="text-[11px] text-[#78716C] leading-relaxed">
+            <span className="text-[#A8A29E] font-medium">How it works:</span>{" "}
             AI plans the workflow. Deterministic runner executes against seeded workspace data. Eval checks safety before any action.
           </p>
         </div>
@@ -148,19 +148,19 @@ export default function AppPage() {
       {/* Main content */}
       <main className="flex-1 mx-auto w-full max-w-5xl px-6 py-8 space-y-8">
         {/* 4-step pipeline */}
-        <div className="flex items-center justify-between rounded-lg border border-white/[0.08] bg-[#0D0D0F] px-5 py-3">
+        <div className="flex items-center justify-between rounded-lg border border-white/[0.08] bg-[#1B1A18] px-5 py-3">
           {SEQUENCE_STEPS.map(({ label, step }, i) => (
             <div key={step} className="flex items-center gap-3 flex-1">
               <div className="flex items-center gap-2.5">
-                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-violet-600 text-[11px] font-semibold font-mono text-white">
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#FF5A2A] text-[11px] font-semibold font-mono text-white shadow-[0_0_16px_-4px_rgba(255,90,42,0.6)]">
                   {step}
                 </span>
-                <span className="text-sm font-medium text-zinc-300">{label}</span>
+                <span className="text-sm font-medium text-stone-300">{label}</span>
               </div>
               {i < SEQUENCE_STEPS.length - 1 && (
                 <div className="flex-1 flex items-center justify-center px-2">
                   <div className="h-px flex-1 bg-white/[0.06]" />
-                  <span className="px-2 text-[#71717A] text-xs">→</span>
+                  <span className="px-2 text-[#78716C] text-xs">→</span>
                   <div className="h-px flex-1 bg-white/[0.06]" />
                 </div>
               )}
@@ -189,18 +189,18 @@ export default function AppPage() {
         )}
 
         {/* Run mode info */}
-        <div className="flex items-center gap-3 text-xs text-[#71717A]">
+        <div className="flex items-center gap-3 text-xs text-[#78716C]">
           <span>
             Runner uses the compiled AI plan when available, then executes
             deterministically against the seeded workspace.
           </span>
           {run.rawJson.mode === "compiled-workflow" && (
-            <Badge variant="outline" className="text-[10px] shrink-0 border-violet-500/30 text-violet-400 bg-violet-500/10">
+            <Badge variant="outline" className="text-[10px] shrink-0 border-[#FF5A2A]/30 text-[#FF6A3D] bg-[#FF5A2A]/12">
               Run mode: compiled AI plan
             </Badge>
           )}
           {run.rawJson.mode === "request-only" && (
-            <Badge variant="outline" className="text-[10px] shrink-0 border-white/[0.08] text-[#A1A1AA]">
+            <Badge variant="outline" className="text-[10px] shrink-0 border-white/[0.08] text-[#A8A29E]">
               Run mode: request-only seeded runner
             </Badge>
           )}
@@ -231,8 +231,8 @@ export default function AppPage() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-white/[0.08] bg-[#0A0A0C] px-6 py-4">
-        <p className="text-center text-xs text-[#71717A]">
+      <footer className="border-t border-white/[0.08] bg-[#131210] px-6 py-4">
+        <p className="text-center text-xs text-[#78716C]">
           Agent Workflow Lab — compile + seeded workspace runner. All
           data is seeded. No real tools are touched.
         </p>

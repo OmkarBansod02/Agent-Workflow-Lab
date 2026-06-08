@@ -56,9 +56,9 @@ export function EvalPanel({ report }: EvalPanelProps) {
   ];
 
   return (
-    <Card className="border-white/[0.08] bg-[#0D0D0F]">
+    <Card className="border-white/[0.08] bg-[#1B1A18]">
       <CardHeader className="flex flex-row items-center justify-between pb-4">
-        <CardTitle className="text-sm font-semibold text-zinc-100">Eval / Safety Report</CardTitle>
+        <CardTitle className="text-sm font-semibold text-stone-100">Eval / Safety Report</CardTitle>
         <Badge className={`text-xs font-semibold border ${readiness.bg} ${readiness.scoreText} ${readiness.ring.replace("ring-", "border-")}`}>
           {readiness.label}
         </Badge>
@@ -87,15 +87,15 @@ export function EvalPanel({ report }: EvalPanelProps) {
                     className={readiness.scoreText}
                   />
                 </svg>
-                <span className="absolute text-xl font-bold tracking-tight text-[#F5F5F5]">
+                <span className="absolute text-xl font-bold tracking-tight text-[#F5F2ED]">
                   {report.overallScore}
                 </span>
               </div>
-              <p className="text-[10px] text-[#71717A] mt-1 font-mono">/ 100</p>
+              <p className="text-[10px] text-[#78716C] mt-1 font-mono">/ 100</p>
             </div>
             <div className="flex-1">
               <Progress value={report.overallScore} className="h-2.5" />
-              <p className="mt-2.5 text-xs text-[#A1A1AA] leading-relaxed">
+              <p className="mt-2.5 text-xs text-[#A8A29E] leading-relaxed">
                 {report.summary}
               </p>
             </div>
@@ -104,20 +104,20 @@ export function EvalPanel({ report }: EvalPanelProps) {
 
         {/* Score breakdown grid */}
         <div>
-          <p className="mb-3 text-[10px] font-medium font-mono text-[#71717A] uppercase tracking-wider">
+          <p className="mb-3 text-[10px] font-medium font-mono text-[#78716C] uppercase tracking-wider">
             Score Breakdown
           </p>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
             {scoreBreakdown.map((score) => (
               <div
                 key={score.label}
-                className="rounded-lg border border-white/[0.06] px-3 py-2.5 bg-[#111113]"
+                className="rounded-lg border border-white/[0.06] px-3 py-2.5 bg-[#201F1D]"
               >
-                <p className="text-[10px] uppercase text-[#71717A] tracking-wide font-mono">
+                <p className="text-[10px] uppercase text-[#78716C] tracking-wide font-mono">
                   {score.label}
                 </p>
                 <div className="mt-1.5 flex items-center gap-2">
-                  <p className="text-sm font-bold tabular-nums text-[#F5F5F5]">{score.value}</p>
+                  <p className="text-sm font-bold tabular-nums text-[#F5F2ED]">{score.value}</p>
                   <div className="flex-1 h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
                     <div
                       className={`h-full rounded-full ${getScoreColor(score.value)}`}
@@ -132,7 +132,7 @@ export function EvalPanel({ report }: EvalPanelProps) {
 
         {/* Checks */}
         <div>
-          <p className="mb-3 text-[10px] font-medium font-mono text-[#71717A] uppercase tracking-wider">
+          <p className="mb-3 text-[10px] font-medium font-mono text-[#78716C] uppercase tracking-wider">
             Safety Checks
           </p>
           <div className="space-y-2">
@@ -148,15 +148,15 @@ export function EvalPanel({ report }: EvalPanelProps) {
                 </span>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-zinc-200">{check.label}</span>
+                    <span className="text-sm font-medium text-stone-200">{check.label}</span>
                     <Badge
                       variant="outline"
-                      className="text-[10px] px-1.5 py-0 border-white/[0.08] text-[#71717A]"
+                      className="text-[10px] px-1.5 py-0 border-white/[0.08] text-[#78716C]"
                     >
                       {check.category}
                     </Badge>
                   </div>
-                  <p className="mt-0.5 text-xs text-[#A1A1AA] leading-relaxed">
+                  <p className="mt-0.5 text-xs text-[#A8A29E] leading-relaxed">
                     {check.detail}
                   </p>
                 </div>
@@ -186,15 +186,15 @@ export function EvalPanel({ report }: EvalPanelProps) {
 
         {/* Recommendations */}
         {report.recommendations.length > 0 && (
-          <div className="rounded-lg border border-white/[0.06] bg-[#111113] px-4 py-3.5">
-            <p className="mb-2 text-xs font-semibold text-zinc-300">
+          <div className="rounded-lg border border-white/[0.06] bg-[#201F1D] px-4 py-3.5">
+            <p className="mb-2 text-xs font-semibold text-stone-300">
               Recommendations
             </p>
             <ul className="space-y-1.5">
               {report.recommendations.map((rec) => (
                 <li
                   key={rec}
-                  className="text-xs leading-relaxed text-[#A1A1AA] pl-4 relative before:absolute before:left-1.5 before:top-[7px] before:h-1 before:w-1 before:rounded-full before:bg-zinc-600"
+                  className="text-xs leading-relaxed text-[#A8A29E] pl-4 relative before:absolute before:left-1.5 before:top-[7px] before:h-1 before:w-1 before:rounded-full before:bg-stone-600"
                 >
                   {rec}
                 </li>

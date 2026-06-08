@@ -31,23 +31,23 @@ const reasons = [
 
 export function WhyThisMatters() {
   return (
-    <section className="px-6 py-20 bg-[#0A0A0C]">
+    <section className="px-6 py-20 bg-[#131210]">
       <div className="mx-auto max-w-5xl">
-        <p className="text-xs font-medium font-mono uppercase tracking-widest text-[#71717A]">
+        <p className="text-xs font-medium font-mono uppercase tracking-widest text-[#78716C]">
           Why This Matters
         </p>
-        <h2 className="mt-3 text-2xl font-semibold tracking-tight text-[#F5F5F5]">
+        <h2 className="mt-3 text-2xl font-semibold tracking-tight text-[#F5F2ED]">
           Built for AI WorkOS teams
         </h2>
         <div className="mt-10 grid gap-8 sm:grid-cols-2">
           {reasons.map((r) => (
             <div key={r.title} className="flex gap-4">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#17171A] border border-white/[0.08]">
-                <r.icon className="h-4 w-4 text-zinc-400" />
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#262320] border border-white/[0.08]">
+                <r.icon className="h-4 w-4 text-stone-400" />
               </div>
               <div>
-                <h3 className="text-sm font-semibold text-zinc-100">{r.title}</h3>
-                <p className="mt-1.5 text-sm leading-relaxed text-[#A1A1AA]">
+                <h3 className="text-sm font-semibold text-stone-100">{r.title}</h3>
+                <p className="mt-1.5 text-sm leading-relaxed text-[#A8A29E]">
                   {r.description}
                 </p>
               </div>
@@ -55,7 +55,7 @@ export function WhyThisMatters() {
           ))}
         </div>
         <div className="mt-12">
-          <Button asChild size="lg" className="bg-violet-600 hover:bg-violet-500 text-white shadow-lg shadow-violet-600/20">
+          <Button asChild size="lg" className="bg-[#FF5A2A] hover:bg-[#FF7048] text-white accent-glow">
             <Link href="/app">Open demo</Link>
           </Button>
         </div>

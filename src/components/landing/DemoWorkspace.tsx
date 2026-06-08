@@ -38,18 +38,18 @@ export function DemoWorkspace() {
   return (
     <section className="px-6 py-20">
       <div className="mx-auto max-w-5xl">
-        <p className="text-xs font-medium font-mono uppercase tracking-widest text-[#71717A]">
+        <p className="text-xs font-medium font-mono uppercase tracking-widest text-[#78716C]">
           Demo Workspace
         </p>
-        <h2 className="mt-3 text-2xl font-semibold tracking-tight text-[#F5F5F5]">
+        <h2 className="mt-3 text-2xl font-semibold tracking-tight text-[#F5F2ED]">
           Realistic seeded workplace data
         </h2>
-        <p className="mt-3 max-w-2xl text-sm leading-relaxed text-[#A1A1AA]">
+        <p className="mt-3 max-w-2xl text-sm leading-relaxed text-[#A8A29E]">
           The demo workspace includes seeded data across five connectors — emails, meetings, deals, messages, and documents that mirror a real enterprise sales workflow.
         </p>
         <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {connectors.map((c) => (
-            <Card key={c.name} className={`border-l-2 ${c.borderClass} border-white/[0.08] bg-[#0D0D0F]`}>
+            <Card key={c.name} className={`border-l-2 ${c.borderClass} border-white/[0.08] bg-[#1B1A18]`}>
               <CardContent className="pt-5">
                 <Badge variant="secondary" className={`mb-3 text-[10px] font-medium ${c.badgeClass}`}>
                   {c.name}
@@ -58,7 +58,7 @@ export function DemoWorkspace() {
                   {c.items.map((item) => (
                     <li
                       key={item}
-                      className="text-sm text-[#A1A1AA] leading-relaxed"
+                      className="text-sm text-[#A8A29E] leading-relaxed"
                     >
                       {item}
                     </li>

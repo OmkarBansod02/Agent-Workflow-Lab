@@ -44,9 +44,9 @@ interface DraftActionCardProps {
 
 export function DraftActionCard({ actions }: DraftActionCardProps) {
   return (
-    <Card className="border-white/[0.08] bg-[#0D0D0F]">
+    <Card className="border-white/[0.08] bg-[#1B1A18]">
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="text-sm font-semibold text-zinc-100">Draft Actions</CardTitle>
+        <CardTitle className="text-sm font-semibold text-stone-100">Draft Actions</CardTitle>
         <Badge className="text-[10px] font-medium uppercase tracking-wide bg-amber-500/15 text-amber-400 border border-amber-500/25 hover:bg-amber-500/15">
           Approval required
         </Badge>
@@ -69,18 +69,18 @@ export function DraftActionCard({ actions }: DraftActionCardProps) {
             >
               <AccordionTrigger className="py-3 hover:no-underline">
                 <div className="flex items-center gap-3 text-left w-full">
-                  <span className={`text-base shrink-0 inline-flex items-center justify-center h-7 w-7 rounded-md ${toolBadgeClass[action.targetTool] ?? "bg-[#17171A]"}`}>
+                  <span className={`text-base shrink-0 inline-flex items-center justify-center h-7 w-7 rounded-md ${toolBadgeClass[action.targetTool] ?? "bg-[#262320]"}`}>
                     {toolIcons[action.targetTool] || "·"}
                   </span>
                   <Badge
                     variant="outline"
-                    className="shrink-0 text-[10px] px-1.5 py-0 border-white/[0.08] text-[#A1A1AA]"
+                    className="shrink-0 text-[10px] px-1.5 py-0 border-white/[0.08] text-[#A8A29E]"
                   >
                     {typeLabels[action.type]}
                   </Badge>
                   <div className="min-w-0 flex-1">
-                    <span className="text-sm font-medium text-zinc-200">{action.title}</span>
-                    <p className="text-xs text-[#71717A] mt-0.5 truncate">
+                    <span className="text-sm font-medium text-stone-200">{action.title}</span>
+                    <p className="text-xs text-[#78716C] mt-0.5 truncate">
                       {action.summary}
                     </p>
                   </div>
@@ -90,7 +90,7 @@ export function DraftActionCard({ actions }: DraftActionCardProps) {
                     </Badge>
                     <Badge
                       variant="outline"
-                      className="text-[10px] px-1.5 py-0 border-white/[0.08] text-[#A1A1AA]"
+                      className="text-[10px] px-1.5 py-0 border-white/[0.08] text-[#A8A29E]"
                     >
                       Draft only
                     </Badge>
@@ -105,16 +105,16 @@ export function DraftActionCard({ actions }: DraftActionCardProps) {
                     </div>
                   )}
                   {action.recipient && (
-                    <p className="text-xs text-[#A1A1AA]">
-                      <span className="font-medium text-zinc-300">To:</span>{" "}
+                    <p className="text-xs text-[#A8A29E]">
+                      <span className="font-medium text-stone-300">To:</span>{" "}
                       {action.recipient}
                     </p>
                   )}
-                  <pre className="whitespace-pre-wrap rounded-lg bg-[#0A0A0C] border border-white/[0.06] p-4 text-xs leading-relaxed font-sans text-zinc-300">
+                  <pre className="whitespace-pre-wrap rounded-lg bg-[#131210] border border-white/[0.06] p-4 text-xs leading-relaxed font-sans text-stone-300">
                     {action.body}
                   </pre>
                   {action.sourceIds.length > 0 && (
-                    <p className="text-[10px] text-[#71717A] font-mono">
+                    <p className="text-[10px] text-[#78716C] font-mono">
                       Based on {action.sourceIds.length} source{action.sourceIds.length !== 1 ? "s" : ""}
                     </p>
                   )}

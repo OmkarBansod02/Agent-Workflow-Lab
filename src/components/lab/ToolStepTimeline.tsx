@@ -13,7 +13,7 @@ const connectorLabels: Record<ConnectorType, string> = {
 const connectorDotClass: Record<ConnectorType, string> = {
   gmail: "bg-rose-500",
   calendar: "bg-blue-500",
-  crm: "bg-violet-500",
+  crm: "bg-blue-500",
   slack: "bg-amber-500",
   docs: "bg-emerald-500",
 };
@@ -32,9 +32,9 @@ interface ToolStepTimelineProps {
 
 export function ToolStepTimeline({ steps }: ToolStepTimelineProps) {
   return (
-    <Card className="border-white/[0.08] bg-[#0D0D0F]">
+    <Card className="border-white/[0.08] bg-[#1B1A18]">
       <CardHeader>
-        <CardTitle className="text-sm font-semibold text-zinc-100">Tool Step Timeline</CardTitle>
+        <CardTitle className="text-sm font-semibold text-stone-100">Tool Step Timeline</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="relative space-y-0">
@@ -43,18 +43,18 @@ export function ToolStepTimeline({ steps }: ToolStepTimelineProps) {
               {i < steps.length - 1 && (
                 <div className="absolute left-[11px] top-6 h-full w-px bg-white/[0.06]" />
               )}
-              <div className={`relative z-10 mt-1.5 h-[9px] w-[9px] shrink-0 rounded-full ${connectorDotClass[step.connector]} ring-2 ring-[#0D0D0F]`} />
+              <div className={`relative z-10 mt-1.5 h-[9px] w-[9px] shrink-0 rounded-full ${connectorDotClass[step.connector]} ring-2 ring-[#1B1A18]`} />
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-zinc-200">{step.label}</span>
+                  <span className="text-sm font-medium text-stone-200">{step.label}</span>
                   <Badge variant="secondary" className={`text-[10px] px-1.5 py-0 ${connectorBadgeClass[step.connector]}`}>
                     {connectorLabels[step.connector]}
                   </Badge>
-                  <span className="ml-auto text-[10px] text-[#71717A] font-mono tabular-nums">
+                  <span className="ml-auto text-[10px] text-[#78716C] font-mono tabular-nums">
                     {step.durationMs}ms
                   </span>
                 </div>
-                <p className="mt-1 text-xs text-[#A1A1AA] leading-relaxed">
+                <p className="mt-1 text-xs text-[#A8A29E] leading-relaxed">
                   {step.description}
                 </p>
               </div>

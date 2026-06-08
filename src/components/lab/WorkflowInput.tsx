@@ -27,18 +27,18 @@ export function WorkflowInput({
   onRun,
 }: WorkflowInputProps) {
   return (
-    <div className="rounded-xl border border-white/[0.08] bg-[#0D0D0F] p-5 space-y-4">
+    <div className="rounded-xl border border-white/[0.08] bg-[#1B1A18] p-5 space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-mono text-[#71717A]">&gt;</span>
-          <label className="text-sm font-semibold text-zinc-100">Workflow Request</label>
+          <span className="text-sm font-mono text-[#78716C]">&gt;</span>
+          <label className="text-sm font-semibold text-stone-100">Workflow Request</label>
         </div>
-        <Badge className="text-[10px] font-mono bg-[#17171A] text-[#71717A] border border-white/[0.08] hover:bg-[#17171A]">
+        <Badge className="text-[10px] font-mono bg-[#262320] text-[#78716C] border border-white/[0.08] hover:bg-[#262320]">
           Seeded runner
         </Badge>
       </div>
       <Textarea
-        className="min-h-[120px] resize-none text-sm leading-relaxed border-white/[0.06] bg-[#0A0A0A] text-zinc-100 placeholder:text-[#71717A] focus-visible:ring-violet-500/30 focus-visible:border-violet-500/40"
+        className="min-h-[120px] resize-none text-sm leading-relaxed border-white/[0.06] bg-[#131210] text-stone-100 placeholder:text-[#78716C] focus-visible:ring-[#FF5A2A]/30 focus-visible:border-[#FF5A2A]/40"
         value={request}
         onChange={(event) => onRequestChange?.(event.target.value)}
       />
@@ -47,18 +47,18 @@ export function WorkflowInput({
           variant="outline"
           onClick={onCompile}
           disabled={isCompiling || isLoading}
-          className="border-violet-500/30 text-violet-400 hover:bg-violet-500/10 hover:text-violet-300"
+          className="border-[#FF5A2A]/30 text-[#FF6A3D] hover:bg-[#FF5A2A]/12 hover:text-[#FF7048]"
         >
           {isCompiling ? "Compiling..." : "Compile workflow"}
         </Button>
         <Button
           onClick={onRun}
           disabled={isLoading || isCompiling}
-          className="bg-violet-600 hover:bg-violet-500 text-white shadow-sm"
+          className="bg-[#FF5A2A] hover:bg-[#FF7048] text-white accent-glow"
         >
           {isLoading ? "Running..." : "Run workflow"}
         </Button>
-        <span className="text-xs text-[#71717A]">
+        <span className="text-xs text-[#78716C]">
           Workflow runs against seeded workplace data only
         </span>
       </div>

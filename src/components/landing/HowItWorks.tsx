@@ -40,12 +40,12 @@ const steps = [
 
 export function HowItWorks() {
   return (
-    <section id="how-it-works" className="px-6 py-20 bg-[#0A0A0C]">
+    <section id="how-it-works" className="px-6 py-20 bg-[#131210]">
       <div className="mx-auto max-w-5xl">
-        <p className="text-xs font-medium font-mono uppercase tracking-widest text-[#71717A]">
+        <p className="text-xs font-medium font-mono uppercase tracking-widest text-[#78716C]">
           How It Works
         </p>
-        <h2 className="mt-3 text-2xl font-semibold tracking-tight text-[#F5F5F5]">
+        <h2 className="mt-3 text-2xl font-semibold tracking-tight text-[#F5F2ED]">
           From messy request to evaluated output
         </h2>
         <div className="mt-10 relative">
@@ -54,12 +54,12 @@ export function HowItWorks() {
           <div className="space-y-6">
             {steps.map((s) => (
               <div key={s.number} className="relative flex gap-5">
-                <div className="relative z-10 flex h-[31px] w-[31px] shrink-0 items-center justify-center rounded-full border border-white/[0.08] bg-[#17171A] text-xs font-mono font-semibold text-zinc-300">
+                <div className="relative z-10 flex h-[31px] w-[31px] shrink-0 items-center justify-center rounded-full border border-white/[0.08] bg-[#262320] text-xs font-mono font-semibold text-stone-300">
                   {s.number}
                 </div>
                 <div className="pb-1">
-                  <h3 className="text-sm font-semibold text-zinc-100">{s.title}</h3>
-                  <p className="mt-1 text-sm leading-relaxed text-[#A1A1AA] max-w-xl">
+                  <h3 className="text-sm font-semibold text-stone-100">{s.title}</h3>
+                  <p className="mt-1 text-sm leading-relaxed text-[#A8A29E] max-w-xl">
                     {s.description}
                   </p>
                   {s.tools.length > 0 && (
