@@ -27,48 +27,48 @@ const pipelineLabels = [
 export function Hero() {
   return (
     <section className="flex flex-col items-center justify-center px-6 pt-20 pb-16 text-center">
-      <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-white px-3.5 py-1.5 shadow-sm">
+      <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/[0.08] bg-[#111113] px-3.5 py-1.5">
         <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-        <span className="text-xs font-medium font-mono tracking-wide text-zinc-600 uppercase">
+        <span className="text-xs font-medium font-mono tracking-wide text-zinc-400 uppercase">
           Workflow Testing Lab
         </span>
       </div>
 
-      <h1 className="max-w-3xl text-3xl font-semibold leading-tight tracking-tight sm:text-4xl lg:text-5xl text-zinc-950">
+      <h1 className="max-w-3xl text-3xl font-semibold leading-tight tracking-tight sm:text-4xl lg:text-5xl text-[#F5F5F5]">
         Test agent workflows before they touch real work
       </h1>
 
-      <p className="mt-5 max-w-2xl text-base leading-relaxed text-zinc-500">
+      <p className="mt-5 max-w-2xl text-base leading-relaxed text-[#A1A1AA]">
         Agent Workflow Lab runs AI workflows against a realistic seeded
         workplace, creates draft actions, and evaluates readiness before
         execution.
       </p>
 
       <div className="mt-8 flex items-center gap-3">
-        <Button asChild size="lg" className="bg-zinc-900 hover:bg-zinc-800 text-white shadow-md">
+        <Button asChild size="lg" className="bg-violet-600 hover:bg-violet-500 text-white shadow-lg shadow-violet-600/20">
           <Link href="/app">Open demo</Link>
         </Button>
-        <Button asChild variant="outline" size="lg" className="border-zinc-300 text-zinc-700 hover:bg-zinc-50">
+        <Button asChild variant="outline" size="lg" className="border-white/[0.08] text-zinc-300 hover:bg-white/[0.04] hover:text-zinc-100">
           <Link href="#how-it-works">How it works</Link>
         </Button>
       </div>
 
       {/* Pipeline label */}
-      <div className="mt-10 flex items-center gap-1.5 text-[11px] font-mono text-zinc-400">
+      <div className="mt-10 flex items-center gap-1.5 text-[11px] font-mono text-[#71717A]">
         {pipelineLabels.map((label, i) => (
           <span key={label} className="flex items-center gap-1.5">
-            <span className="text-zinc-500">{label}</span>
+            <span className="text-[#A1A1AA]">{label}</span>
             {i < pipelineLabels.length - 1 && (
-              <span className="text-zinc-300">→</span>
+              <span className="text-[#71717A]">→</span>
             )}
           </span>
         ))}
       </div>
 
       {/* Dark product preview card */}
-      <div className="mt-5 w-full max-w-xl rounded-xl console-panel border shadow-2xl shadow-zinc-950/10 p-5">
+      <div className="mt-5 w-full max-w-xl rounded-xl border border-white/[0.08] bg-[#0A0A0C] shadow-2xl shadow-violet-500/[0.04] p-5">
         <div className="flex items-center justify-between mb-4">
-          <span className="text-[11px] font-mono font-medium text-zinc-400 uppercase tracking-wider">
+          <span className="text-[11px] font-mono font-medium text-[#71717A] uppercase tracking-wider">
             Run preview
           </span>
           <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[10px] font-medium text-emerald-400">
@@ -80,11 +80,11 @@ export function Hero() {
           {pipelineSteps.map(({ label, icon: Icon, color }) => (
             <div
               key={label}
-              className="flex items-center gap-3 rounded-lg console-panel-subtle px-3.5 py-2.5"
+              className="flex items-center gap-3 rounded-lg bg-[#111113] border border-white/[0.04] px-3.5 py-2.5"
             >
               <Icon className={`h-3.5 w-3.5 shrink-0 ${color}`} />
               <span className="text-sm text-zinc-300">{label}</span>
-              <span className="ml-auto text-[10px] font-mono text-zinc-500">
+              <span className="ml-auto text-[10px] font-mono text-[#71717A]">
                 ✓
               </span>
             </div>

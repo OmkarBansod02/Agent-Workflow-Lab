@@ -26,19 +26,19 @@ export function Problem() {
   return (
     <section className="px-6 py-20">
       <div className="mx-auto max-w-5xl">
-        <p className="text-xs font-medium font-mono uppercase tracking-widest text-zinc-400">
+        <p className="text-xs font-medium font-mono uppercase tracking-widest text-[#71717A]">
           The Problem
         </p>
-        <h2 className="mt-3 text-2xl font-semibold tracking-tight text-zinc-950">
+        <h2 className="mt-3 text-2xl font-semibold tracking-tight text-[#F5F5F5]">
           Agent workflows are dangerous without a sandbox
         </h2>
         <div className="mt-10 grid gap-5 sm:grid-cols-3">
           {problems.map((p) => (
-            <Card key={p.title} className="border-l-2 border-l-rose-400/60 border-zinc-200 shadow-sm">
+            <Card key={p.title} className="border-l-2 border-l-rose-400/60 border-white/[0.08] bg-[#0D0D0F]">
               <CardContent className="pt-5">
-                <p.icon className="h-4 w-4 text-rose-500/70 mb-3" />
-                <h3 className="text-sm font-semibold text-zinc-900">{p.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-zinc-500">
+                <p.icon className="h-4 w-4 text-rose-400/70 mb-3" />
+                <h3 className="text-sm font-semibold text-zinc-100">{p.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-[#A1A1AA]">
                   {p.description}
                 </p>
               </CardContent>
