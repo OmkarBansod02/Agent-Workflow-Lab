@@ -1,14 +1,10 @@
-import { Separator } from "@/components/ui/separator";
-
 export function Footer() {
   return (
-    <footer className="px-6 py-10">
-      <Separator className="mb-8" />
-      <div className="mx-auto max-w-5xl flex flex-col items-center gap-2 text-center">
-        <p className="text-sm font-medium">Agent Workflow Lab</p>
-        <p className="text-xs text-muted-foreground">
-          A workflow testing sandbox for AI WorkOS teams. Phase 0 — static UI
-          demo.
+    <footer className="border-t border-zinc-200 bg-zinc-50/50 px-6 py-8">
+      <div className="mx-auto max-w-5xl flex flex-col items-center gap-1.5 text-center">
+        <p className="text-sm font-medium text-zinc-700">Agent Workflow Lab</p>
+        <p className="text-xs text-zinc-400">
+          A workflow testing sandbox for AI WorkOS teams. All data is seeded.
         </p>
       </div>
     </footer>
