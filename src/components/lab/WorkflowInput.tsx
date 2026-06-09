@@ -5,12 +5,15 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DEMO_REQUEST } from "@/lib/demo-data";
 
+type RunMode = "compiled-workflow" | "request-only" | string;
+
 interface WorkflowInputProps {
   request?: string;
   isLoading?: boolean;
   isCompiling?: boolean;
   error?: string | null;
   compileError?: string | null;
+  runMode?: RunMode;
   onRequestChange?: (request: string) => void;
   onCompile?: () => void;
   onRun?: () => void;
@@ -22,12 +25,13 @@ export function WorkflowInput({
   isCompiling = false,
   error,
   compileError,
+  runMode,
   onRequestChange,
   onCompile,
   onRun,
 }: WorkflowInputProps) {
   return (
-    <div className="rounded-xl border border-white/[0.08] bg-[#1B1A18] p-5 space-y-4">
+    <div className="rounded-xl border border-white/[0.08] bg-[#1B1A18] p-4 space-y-3">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="text-sm font-mono text-[#78716C]">&gt;</span>
@@ -38,11 +42,11 @@ export function WorkflowInput({
         </Badge>
       </div>
       <Textarea
-        className="min-h-[120px] resize-none text-sm leading-relaxed border-white/[0.06] bg-[#131210] text-stone-100 placeholder:text-[#78716C] focus-visible:ring-[#FF5A2A]/30 focus-visible:border-[#FF5A2A]/40"
+        className="min-h-[88px] resize-none text-sm leading-relaxed border-white/[0.06] bg-[#131210] text-stone-100 placeholder:text-[#78716C] focus-visible:ring-[#FF5A2A]/30 focus-visible:border-[#FF5A2A]/40"
         value={request}
         onChange={(event) => onRequestChange?.(event.target.value)}
       />
-      <div className="flex items-center gap-3">
+      <div className="grid grid-cols-2 gap-2">
         <Button
           variant="outline"
           onClick={onCompile}
@@ -58,10 +62,29 @@ export function WorkflowInput({
         >
           {isLoading ? "Running..." : "Run workflow"}
         </Button>
-        <span className="text-xs text-[#78716C]">
-          Workflow runs against seeded workplace data only
-        </span>
       </div>
+
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-[11px] text-[#78716C]">
+          Runs against seeded workplace data only
+        </span>
+        {runMode === "compiled-workflow" && (
+          <Badge variant="outline" className="text-[10px] shrink-0 border-[#FF5A2A]/30 text-[#FF6A3D] bg-[#FF5A2A]/12">
+            Compiled AI plan
+          </Badge>
+        )}
+        {runMode === "request-only" && (
+          <Badge variant="outline" className="text-[10px] shrink-0 border-white/[0.08] text-[#A8A29E]">
+            Request-only
+          </Badge>
+        )}
+      </div>
+
+      <p className="rounded-lg border border-white/[0.06] bg-[#201F1D] px-3 py-2 text-[11px] leading-relaxed text-[#A8A29E]">
+        <span className="font-medium text-stone-300">AI plans.</span> Deterministic runner executes.{" "}
+        <span className="font-medium text-stone-300">Eval checks safety</span> before action.
+      </p>
+
       {compileError ? (
         <p className="text-xs text-rose-400 bg-rose-500/10 border border-rose-500/20 rounded-md px-3 py-2">{compileError}</p>
       ) : null}
