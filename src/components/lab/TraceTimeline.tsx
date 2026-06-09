@@ -44,31 +44,31 @@ export function TraceTimeline({ events }: TraceTimelineProps) {
   return (
     <div className="rounded-xl border border-white/[0.08] bg-[#131210] overflow-hidden shadow-lg shadow-[#FF5A2A]/[0.05]">
       {/* Header */}
-      <div className="flex items-center justify-between px-5 pt-4 pb-3">
+      <div className="flex items-center justify-between px-5 pt-5 pb-3">
         <div>
           <div className="flex items-center gap-2">
-            <span className="text-[10px] font-mono text-[#78716C] uppercase tracking-wider">trace</span>
-            <h3 className="text-sm font-semibold text-stone-100">Agent Trace</h3>
+            <span className="text-[11px] font-mono text-[#78716C] uppercase tracking-wider">trace</span>
+            <h3 className="text-[15px] font-semibold text-stone-100">Agent Trace</h3>
           </div>
-          <p className="mt-0.5 text-[11px] text-[#78716C] font-mono">
+          <p className="mt-0.5 text-xs text-[#78716C] font-mono">
             {events.length} spans · {(totalMs / 1000).toFixed(1)}s total
           </p>
         </div>
         <div className="flex items-center gap-3">
           {successCount > 0 && (
-            <span className="inline-flex items-center gap-1 text-[10px] text-emerald-400 font-mono">
+            <span className="inline-flex items-center gap-1 text-[11px] text-emerald-400 font-mono">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
               {successCount}
             </span>
           )}
           {warningCount > 0 && (
-            <span className="inline-flex items-center gap-1 text-[10px] text-amber-400 font-mono">
+            <span className="inline-flex items-center gap-1 text-[11px] text-amber-400 font-mono">
               <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
               {warningCount}
             </span>
           )}
           {blockedCount > 0 && (
-            <span className="inline-flex items-center gap-1 text-[10px] text-rose-400 font-mono">
+            <span className="inline-flex items-center gap-1 text-[11px] text-rose-400 font-mono">
               <span className="h-1.5 w-1.5 rounded-full bg-rose-400" />
               {blockedCount}
             </span>
@@ -93,13 +93,13 @@ export function TraceTimeline({ events }: TraceTimelineProps) {
         </div>
 
         {/* Trace spans */}
-        <div className="space-y-1">
+        <div className="space-y-1.5">
           {events.map((e) => {
             const style = statusStyles[e.status];
             return (
               <div
                 key={e.id}
-                className={`flex items-start gap-3 rounded-md border-l-2 ${style.border} bg-[#201F1D] border border-white/[0.04] px-3 py-2.5 transition-colors hover:bg-[#262320]`}
+                className={`flex items-start gap-3 rounded-md border-l-2 ${style.border} bg-[#201F1D] border border-white/[0.04] px-4 py-3 transition-colors hover:bg-[#262320]`}
               >
                 <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${style.dot}`} />
                 <div className="min-w-0 flex-1">
@@ -107,25 +107,25 @@ export function TraceTimeline({ events }: TraceTimelineProps) {
                     <span className="text-sm font-medium leading-tight text-stone-200">{e.label}</span>
                     <Badge
                       variant="secondary"
-                      className={`text-[10px] px-1.5 py-0 border-0 ${typeColors[e.type]}`}
+                      className={`text-[11px] px-1.5 py-0 border-0 ${typeColors[e.type]}`}
                     >
                       {e.type}
                     </Badge>
                     {e.tool && (
-                      <span className="inline-flex items-center gap-0.5 rounded border border-white/[0.08] bg-[#262320] px-1.5 py-0 text-[10px] font-mono text-[#A8A29E]">
+                      <span className="inline-flex items-center gap-0.5 rounded border border-white/[0.08] bg-[#262320] px-1.5 py-0 text-[11px] font-mono text-[#A8A29E]">
                         {toolIcons[e.tool] || "·"} {e.tool}
                       </span>
                     )}
                     {e.sources && e.sources.length > 0 && (
-                      <span className="text-[10px] text-[#78716C] font-mono">
+                      <span className="text-[11px] text-[#78716C] font-mono">
                         {e.sources.length} source{e.sources.length !== 1 ? "s" : ""}
                       </span>
                     )}
-                    <span className="ml-auto text-[10px] font-mono text-[#78716C] tabular-nums">
+                    <span className="ml-auto text-[11px] font-mono text-[#78716C] tabular-nums">
                       {e.durationMs}ms
                     </span>
                   </div>
-                  <p className="mt-0.5 text-xs text-[#78716C] leading-relaxed">
+                  <p className="mt-0.5 text-[13px] text-[#78716C] leading-relaxed">
                     {e.detail}
                   </p>
                 </div>

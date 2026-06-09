@@ -31,10 +31,10 @@ export function JsonInspector({ data }: JsonInspectorProps) {
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <h3 className="text-sm font-semibold text-stone-300">
+            <h3 className="text-[15px] font-semibold text-stone-300">
               Run Debug JSON
             </h3>
-            <Badge className="text-[10px] px-1.5 py-0 bg-[#262320] text-[#78716C] border border-white/[0.08] font-mono hover:bg-[#262320]">
+            <Badge className="text-[11px] px-1.5 py-0 bg-[#262320] text-[#78716C] border border-white/[0.08] font-mono hover:bg-[#262320]">
               Replay Payload
             </Badge>
           </div>
@@ -42,7 +42,7 @@ export function JsonInspector({ data }: JsonInspectorProps) {
             {isOpen ? "▾ Collapse" : "▸ Expand"}
           </span>
         </div>
-        <p className="mt-1 text-[11px] text-[#78716C]">
+        <p className="mt-1 text-xs text-[#78716C]">
           Every run emits a replayable trace for debugging agent behavior.
         </p>
       </div>
@@ -54,7 +54,7 @@ export function JsonInspector({ data }: JsonInspectorProps) {
                 e.stopPropagation();
                 handleCopy();
               }}
-              className="absolute top-2 right-2 z-10 inline-flex items-center gap-1 rounded-md bg-[#262320] border border-white/[0.08] px-2 py-1 text-[10px] text-[#A8A29E] hover:text-stone-200 hover:bg-[#2A2724] transition-colors"
+              className="absolute top-2 right-2 z-10 inline-flex items-center gap-1 rounded-md bg-[#262320] border border-white/[0.08] px-2 py-1 text-[11px] text-[#A8A29E] hover:text-stone-200 hover:bg-[#2A2724] transition-colors"
             >
               {copied ? (
                 <>
@@ -69,7 +69,7 @@ export function JsonInspector({ data }: JsonInspectorProps) {
               )}
             </button>
             <ScrollArea className="h-[400px] w-full">
-              <pre className="p-4 text-[11px] leading-relaxed font-mono text-[#A8A29E]">
+              <pre className="p-4 text-xs leading-relaxed font-mono text-[#A8A29E]">
                 {jsonString}
               </pre>
             </ScrollArea>

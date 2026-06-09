@@ -58,8 +58,8 @@ export function EvalPanel({ report }: EvalPanelProps) {
   return (
     <Card className="border-white/[0.08] bg-[#1B1A18]">
       <CardHeader className="flex flex-row items-center justify-between pb-4">
-        <CardTitle className="text-sm font-semibold text-stone-100">Eval / Safety Report</CardTitle>
-        <Badge className={`text-xs font-semibold border ${readiness.bg} ${readiness.scoreText} ${readiness.ring.replace("ring-", "border-")}`}>
+        <CardTitle className="text-[15px] font-semibold text-stone-100">Eval / Safety Report</CardTitle>
+        <Badge className={`text-[13px] font-semibold border ${readiness.bg} ${readiness.scoreText} ${readiness.ring.replace("ring-", "border-")}`}>
           {readiness.label}
         </Badge>
       </CardHeader>
@@ -91,11 +91,11 @@ export function EvalPanel({ report }: EvalPanelProps) {
                   {report.overallScore}
                 </span>
               </div>
-              <p className="text-[10px] text-[#78716C] mt-1 font-mono">/ 100</p>
+              <p className="text-[11px] text-[#78716C] mt-1 font-mono">/ 100</p>
             </div>
             <div className="flex-1">
               <Progress value={report.overallScore} className="h-2.5" />
-              <p className="mt-2.5 text-xs text-[#A8A29E] leading-relaxed">
+              <p className="mt-2.5 text-[13px] text-[#A8A29E] leading-relaxed">
                 {report.summary}
               </p>
             </div>
@@ -104,16 +104,16 @@ export function EvalPanel({ report }: EvalPanelProps) {
 
         {/* Score breakdown grid */}
         <div>
-          <p className="mb-3 text-[10px] font-medium font-mono text-[#78716C] uppercase tracking-wider">
+          <p className="mb-3 text-[11px] font-medium font-mono text-[#78716C] uppercase tracking-wider">
             Score Breakdown
           </p>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
             {scoreBreakdown.map((score) => (
               <div
                 key={score.label}
-                className="rounded-lg border border-white/[0.06] px-3 py-2.5 bg-[#201F1D]"
+                className="rounded-lg border border-white/[0.06] px-3 py-3 bg-[#201F1D]"
               >
-                <p className="text-[10px] uppercase text-[#78716C] tracking-wide font-mono">
+                <p className="text-[11px] uppercase text-[#78716C] tracking-wide font-mono">
                   {score.label}
                 </p>
                 <div className="mt-1.5 flex items-center gap-2">
@@ -132,14 +132,14 @@ export function EvalPanel({ report }: EvalPanelProps) {
 
         {/* Checks */}
         <div>
-          <p className="mb-3 text-[10px] font-medium font-mono text-[#78716C] uppercase tracking-wider">
+          <p className="mb-3 text-[11px] font-medium font-mono text-[#78716C] uppercase tracking-wider">
             Safety Checks
           </p>
           <div className="space-y-2">
             {report.checks.map((check) => (
               <div
                 key={check.id}
-                className="flex items-start gap-3 rounded-lg border border-white/[0.06] px-3.5 py-2.5"
+                className="flex items-start gap-3 rounded-lg border border-white/[0.06] px-4 py-3"
               >
                 <span
                   className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold border ${statusColor[check.status]}`}
@@ -151,12 +151,12 @@ export function EvalPanel({ report }: EvalPanelProps) {
                     <span className="text-sm font-medium text-stone-200">{check.label}</span>
                     <Badge
                       variant="outline"
-                      className="text-[10px] px-1.5 py-0 border-white/[0.08] text-[#78716C]"
+                      className="text-[11px] px-1.5 py-0 border-white/[0.08] text-[#78716C]"
                     >
                       {check.category}
                     </Badge>
                   </div>
-                  <p className="mt-0.5 text-xs text-[#A8A29E] leading-relaxed">
+                  <p className="mt-0.5 text-[13px] text-[#A8A29E] leading-relaxed">
                     {check.detail}
                   </p>
                 </div>
@@ -168,14 +168,14 @@ export function EvalPanel({ report }: EvalPanelProps) {
         {/* Warnings */}
         {report.warnings.length > 0 && (
           <div className="rounded-lg border border-amber-500/20 bg-amber-500/10 px-4 py-3.5">
-            <p className="mb-2 text-xs font-semibold text-amber-400 flex items-center gap-1.5">
+            <p className="mb-2 text-[13px] font-semibold text-amber-400 flex items-center gap-1.5">
               <span>⚠</span> Warnings
             </p>
             <ul className="space-y-1.5">
               {report.warnings.map((warning) => (
                 <li
                   key={warning}
-                  className="text-xs leading-relaxed text-amber-300 pl-4 relative before:absolute before:left-1.5 before:top-[7px] before:h-1 before:w-1 before:rounded-full before:bg-amber-400"
+                  className="text-[13px] leading-relaxed text-amber-300 pl-4 relative before:absolute before:left-1.5 before:top-[7px] before:h-1 before:w-1 before:rounded-full before:bg-amber-400"
                 >
                   {warning}
                 </li>
@@ -187,14 +187,14 @@ export function EvalPanel({ report }: EvalPanelProps) {
         {/* Recommendations */}
         {report.recommendations.length > 0 && (
           <div className="rounded-lg border border-white/[0.06] bg-[#201F1D] px-4 py-3.5">
-            <p className="mb-2 text-xs font-semibold text-stone-300">
+            <p className="mb-2 text-[13px] font-semibold text-stone-300">
               Recommendations
             </p>
             <ul className="space-y-1.5">
               {report.recommendations.map((rec) => (
                 <li
                   key={rec}
-                  className="text-xs leading-relaxed text-[#A8A29E] pl-4 relative before:absolute before:left-1.5 before:top-[7px] before:h-1 before:w-1 before:rounded-full before:bg-stone-600"
+                  className="text-[13px] leading-relaxed text-[#A8A29E] pl-4 relative before:absolute before:left-1.5 before:top-[7px] before:h-1 before:w-1 before:rounded-full before:bg-stone-600"
                 >
                   {rec}
                 </li>

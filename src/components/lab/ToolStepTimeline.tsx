@@ -34,7 +34,7 @@ export function ToolStepTimeline({ steps }: ToolStepTimelineProps) {
   return (
     <Card className="border-white/[0.08] bg-[#1B1A18]">
       <CardHeader>
-        <CardTitle className="text-sm font-semibold text-stone-100">Tool Step Timeline</CardTitle>
+        <CardTitle className="text-[15px] font-semibold text-stone-100">Tool Step Timeline</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="relative space-y-0">
@@ -47,14 +47,14 @@ export function ToolStepTimeline({ steps }: ToolStepTimelineProps) {
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-medium text-stone-200">{step.label}</span>
-                  <Badge variant="secondary" className={`text-[10px] px-1.5 py-0 ${connectorBadgeClass[step.connector]}`}>
+                  <Badge variant="secondary" className={`text-[11px] px-1.5 py-0 ${connectorBadgeClass[step.connector]}`}>
                     {connectorLabels[step.connector]}
                   </Badge>
-                  <span className="ml-auto text-[10px] text-[#78716C] font-mono tabular-nums">
+                  <span className="ml-auto text-[11px] text-[#78716C] font-mono tabular-nums">
                     {step.durationMs}ms
                   </span>
                 </div>
-                <p className="mt-1 text-xs text-[#A8A29E] leading-relaxed">
+                <p className="mt-1 text-[13px] text-[#A8A29E] leading-relaxed">
                   {step.description}
                 </p>
               </div>
