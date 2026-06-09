@@ -49,8 +49,8 @@ export function WorkflowSummary({ data }: WorkflowSummaryProps) {
 
 function Stat({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="rounded-lg bg-[#201F1D] border border-white/[0.06] px-3.5 py-3">
-      <p className="text-2xl font-bold tracking-tight text-[#F5F2ED]">{value}</p>
+    <div className="rounded-lg bg-[#201F1D] border border-white/[0.06] px-3 py-2.5">
+      <p className="text-lg font-bold tracking-tight text-[#F5F2ED]">{value}</p>
       <p className="text-[10px] font-mono text-[#78716C] uppercase tracking-wider mt-0.5">{label}</p>
     </div>
   );
