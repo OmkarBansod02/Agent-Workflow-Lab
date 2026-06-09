@@ -157,6 +157,18 @@
   background-size: 100% 100%, 30px 30px, 30px 30px;
 }
 
+/* Full-app shell: subtle warm glow + dotted grid fixed across the viewport.
+   Kept low-opacity so it sits behind content without overpowering it. */
+.app-shell-bg {
+  background-color: var(--background);
+  background-image:
+    radial-gradient(80% 55% at 50% -8%, rgba(255, 90, 42, 0.06) 0%, transparent 60%),
+    radial-gradient(60% 50% at 100% 100%, rgba(255, 90, 42, 0.035) 0%, transparent 55%),
+    radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.022) 1px, transparent 0);
+  background-size: 100% 100%, 100% 100%, 28px 28px;
+  background-attachment: fixed;
+}
+
 /* Subtle warm glow for primary CTAs and key cards */
 .accent-glow {
   box-shadow: 0 0 0 1px rgba(255, 90, 42, 0.10),
