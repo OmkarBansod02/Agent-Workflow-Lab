@@ -14,7 +14,7 @@ import { TraceTimeline } from "@/components/lab/TraceTimeline";
 import { DraftActionCard } from "@/components/lab/DraftActionCard";
 import { EvalPanel } from "@/components/lab/EvalPanel";
 import { JsonInspector } from "@/components/lab/JsonInspector";
-import { demoData } from "@/lib/demo-data";
+import { DEMO_REQUEST } from "@/lib/demo-data";
 import type { DemoRun } from "@/lib/types";
 import type { CompiledWorkflow } from "@/lib/compiler-schema";
 
@@ -25,9 +25,17 @@ const SEQUENCE_STEPS = [
   { label: "Eval report", step: 4 },
 ] as const;
 
+function EmptyState({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="rounded-xl border border-dashed border-white/[0.08] bg-[#1B1A18]/60 px-6 py-12 text-center">
+      <p className="text-sm text-[#78716C] leading-relaxed">{children}</p>
+    </div>
+  );
+}
+
 export default function AppPage() {
-  const [request, setRequest] = useState(demoData.request);
-  const [run, setRun] = useState<DemoRun>(demoData);
+  const [request, setRequest] = useState(DEMO_REQUEST);
+  const [run, setRun] = useState<DemoRun | null>(null);
   const [compiledWorkflow, setCompiledWorkflow] =
     useState<CompiledWorkflow | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -119,18 +127,20 @@ export default function AppPage() {
     }
   }
 
-  const runMode = typeof run.rawJson.mode === "string" ? run.rawJson.mode : undefined;
+  const runMode = run
+    ? (typeof run.rawJson.mode === "string" ? run.rawJson.mode : undefined)
+    : undefined;
 
   const metrics = [
-    { label: "Steps", value: run.workflowSummary.stepsCount },
-    { label: "Sources", value: run.workflowSummary.sourcesFound },
-    { label: "Actions", value: run.workflowSummary.actionsGenerated },
-    { label: "Readiness", value: run.eval.readinessScore },
+    { label: "Steps", value: run ? run.workflowSummary.stepsCount : "—" },
+    { label: "Sources", value: run ? run.workflowSummary.sourcesFound : "—" },
+    { label: "Actions", value: run ? run.workflowSummary.actionsGenerated : "—" },
+    { label: "Readiness", value: run ? run.eval.readinessScore : "—" },
   ];
 
   const approvalGates = compiledWorkflow?.approvalGates ?? [];
   const missingInfo =
-    compiledWorkflow?.missingInfo ?? run.workflowSummary.missingInfo ?? [];
+    compiledWorkflow?.missingInfo ?? run?.workflowSummary.missingInfo ?? [];
 
   return (
     <div className="app-shell-bg flex flex-col flex-1 min-h-screen">
@@ -147,15 +157,15 @@ export default function AppPage() {
             <Separator orientation="vertical" className="h-4 bg-white/[0.08]" />
             <span className="text-xs text-[#78716C] font-mono">Command Center</span>
           </div>
-          <Badge className="text-[10px] font-mono bg-[#FF5A2A]/12 text-[#FF6A3D] border border-[#FF5A2A]/25 hover:bg-[#FF5A2A]/12">
+          <Badge className="text-[11px] font-mono bg-[#FF5A2A]/12 text-[#FF6A3D] border border-[#FF5A2A]/25 hover:bg-[#FF5A2A]/12">
             Demo workspace: seeded workplace data
           </Badge>
         </div>
       </header>
 
       {/* Two-column command center */}
-      <main className="mx-auto w-full max-w-[1400px] flex-1 px-5 py-5">
-        <div className="grid items-start gap-5 lg:grid-cols-[340px_minmax(0,1fr)]">
+      <main className="mx-auto w-full max-w-[1440px] flex-1 px-5 py-5">
+        <div className="grid items-start gap-5 lg:grid-cols-[360px_minmax(0,1fr)]">
           {/* Left panel */}
           <aside className="space-y-4 lg:sticky lg:top-[68px]">
             <WorkflowInput
@@ -172,7 +182,7 @@ export default function AppPage() {
 
             {/* Compact metrics */}
             <div className="rounded-xl border border-white/[0.08] bg-[#1B1A18] p-4">
-              <p className="mb-3 text-[10px] font-mono uppercase tracking-wider text-[#78716C]">
+              <p className="mb-3 text-[11px] font-mono uppercase tracking-wider text-[#78716C]">
                 Run metrics
               </p>
               <div className="grid grid-cols-2 gap-2">
@@ -184,7 +194,7 @@ export default function AppPage() {
                     <p className="text-lg font-bold tracking-tight tabular-nums text-[#F5F2ED]">
                       {m.value}
                     </p>
-                    <p className="mt-0.5 text-[10px] font-mono uppercase tracking-wider text-[#78716C]">
+                    <p className="mt-0.5 text-[11px] font-mono uppercase tracking-wider text-[#78716C]">
                       {m.label}
                     </p>
                   </div>
@@ -196,19 +206,19 @@ export default function AppPage() {
           {/* Right workspace */}
           <Tabs defaultValue="overview" className="gap-4">
             <TabsList className="h-9 w-full justify-start overflow-x-auto border border-white/[0.08] bg-[#1B1A18] p-1">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="trace">Trace</TabsTrigger>
-              <TabsTrigger value="sources">Sources</TabsTrigger>
-              <TabsTrigger value="drafts">Drafts</TabsTrigger>
-              <TabsTrigger value="eval">Eval</TabsTrigger>
-              <TabsTrigger value="debug">Debug</TabsTrigger>
+              <TabsTrigger value="overview" className="text-[13px]">Overview</TabsTrigger>
+              <TabsTrigger value="trace" className="text-[13px]">Trace</TabsTrigger>
+              <TabsTrigger value="sources" className="text-[13px]">Sources</TabsTrigger>
+              <TabsTrigger value="drafts" className="text-[13px]">Drafts</TabsTrigger>
+              <TabsTrigger value="eval" className="text-[13px]">Eval</TabsTrigger>
+              <TabsTrigger value="debug" className="text-[13px]">Debug</TabsTrigger>
             </TabsList>
 
             {/* Overview */}
             <TabsContent value="overview" className="space-y-4">
               {/* Pipeline status */}
-              <div className="rounded-xl border border-white/[0.08] bg-[#1B1A18] px-4 py-3">
-                <p className="mb-3 text-[10px] font-mono uppercase tracking-wider text-[#78716C]">
+              <div className="rounded-xl border border-white/[0.08] bg-[#1B1A18] px-5 py-4">
+                <p className="mb-3 text-[11px] font-mono uppercase tracking-wider text-[#78716C]">
                   Pipeline status
                 </p>
                 <div className="flex flex-wrap items-center gap-y-2">
@@ -218,7 +228,7 @@ export default function AppPage() {
                         <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#FF5A2A] text-[10px] font-semibold font-mono text-white shadow-[0_0_14px_-4px_rgba(255,90,42,0.6)]">
                           {step}
                         </span>
-                        <span className="text-xs font-medium text-stone-300">{label}</span>
+                        <span className="text-[13px] font-medium text-stone-300">{label}</span>
                       </div>
                       {i < SEQUENCE_STEPS.length - 1 && (
                         <span className="px-3 text-xs text-[#78716C]">→</span>
@@ -228,7 +238,13 @@ export default function AppPage() {
                 </div>
               </div>
 
-              <WorkflowSummary data={run.workflowSummary} />
+              {!compiledWorkflow && !run && (
+                <EmptyState>
+                  Compile a workflow to see the agent plan, then run it against the seeded workspace.
+                </EmptyState>
+              )}
+
+              {run && <WorkflowSummary data={run.workflowSummary} />}
 
               {compiledWorkflow && (
                 <CompiledWorkflowPanel workflow={compiledWorkflow} />
@@ -237,10 +253,10 @@ export default function AppPage() {
               {/* Approval gates / missing info summary */}
               {(approvalGates.length > 0 || missingInfo.length > 0) && (
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="rounded-xl border border-white/[0.08] bg-[#1B1A18] p-4">
+                  <div className="rounded-xl border border-white/[0.08] bg-[#1B1A18] p-5">
                     <div className="mb-3 flex items-center justify-between">
-                      <p className="text-xs font-semibold text-stone-200">Approval gates</p>
-                      <Badge className="text-[10px] font-medium uppercase tracking-wide bg-amber-500/15 text-amber-400 border border-amber-500/25 hover:bg-amber-500/15">
+                      <p className="text-[13px] font-semibold text-stone-200">Approval gates</p>
+                      <Badge className="text-[11px] font-medium uppercase tracking-wide bg-amber-500/15 text-amber-400 border border-amber-500/25 hover:bg-amber-500/15">
                         {approvalGates.length} gate{approvalGates.length !== 1 ? "s" : ""}
                       </Badge>
                     </div>
@@ -251,37 +267,37 @@ export default function AppPage() {
                             key={gate.id}
                             className="rounded-md border-l-2 border-l-amber-400 border border-amber-500/20 bg-amber-500/10 px-3 py-2"
                           >
-                            <span className="text-xs font-medium text-stone-200">{gate.title}</span>
-                            <p className="mt-0.5 text-[11px] text-[#A8A29E]">{gate.reason}</p>
+                            <span className="text-[13px] font-medium text-stone-200">{gate.title}</span>
+                            <p className="mt-0.5 text-xs text-[#A8A29E]">{gate.reason}</p>
                           </li>
                         ))}
                       </ul>
                     ) : (
-                      <p className="text-[11px] text-[#78716C]">
+                      <p className="text-xs text-[#78716C]">
                         Compile a workflow to surface explicit approval gates. All actions remain
                         draft-only and require approval.
                       </p>
                     )}
                   </div>
 
-                  <div className="rounded-xl border border-white/[0.08] bg-[#1B1A18] p-4">
+                  <div className="rounded-xl border border-white/[0.08] bg-[#1B1A18] p-5">
                     <div className="mb-3 flex items-center justify-between">
-                      <p className="text-xs font-semibold text-stone-200">Missing info</p>
-                      <Badge variant="outline" className="text-[10px] border-white/[0.08] text-[#A8A29E]">
+                      <p className="text-[13px] font-semibold text-stone-200">Missing info</p>
+                      <Badge variant="outline" className="text-[11px] border-white/[0.08] text-[#A8A29E]">
                         {missingInfo.length} item{missingInfo.length !== 1 ? "s" : ""}
                       </Badge>
                     </div>
                     {missingInfo.length > 0 ? (
                       <ul className="space-y-1.5">
                         {missingInfo.map((info, i) => (
-                          <li key={i} className="flex items-start gap-2 text-[11px] text-[#A8A29E]">
+                          <li key={i} className="flex items-start gap-2 text-xs text-[#A8A29E]">
                             <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-amber-400" />
                             {info}
                           </li>
                         ))}
                       </ul>
                     ) : (
-                      <p className="text-[11px] text-[#78716C]">No missing info flagged.</p>
+                      <p className="text-xs text-[#78716C]">No missing info flagged.</p>
                     )}
                   </div>
                 </div>
@@ -290,28 +306,50 @@ export default function AppPage() {
 
             {/* Trace */}
             <TabsContent value="trace" className="space-y-4">
-              <TraceTimeline events={run.trace} />
-              <ToolStepTimeline steps={run.steps} />
+              {run ? (
+                <>
+                  <TraceTimeline events={run.trace} />
+                  <ToolStepTimeline steps={run.steps} />
+                </>
+              ) : (
+                <EmptyState>Run the workflow to see trace events.</EmptyState>
+              )}
             </TabsContent>
 
             {/* Sources */}
             <TabsContent value="sources">
-              <WorkspaceSourceCard sources={run.sources} />
+              {run ? (
+                <WorkspaceSourceCard sources={run.sources} />
+              ) : (
+                <EmptyState>Sources will appear after seeded workspace search.</EmptyState>
+              )}
             </TabsContent>
 
             {/* Drafts */}
             <TabsContent value="drafts">
-              <DraftActionCard actions={run.actions} />
+              {run ? (
+                <DraftActionCard actions={run.actions} />
+              ) : (
+                <EmptyState>Draft actions will appear after the workflow run. Nothing is executed automatically.</EmptyState>
+              )}
             </TabsContent>
 
             {/* Eval */}
             <TabsContent value="eval">
-              <EvalPanel report={run.eval} />
+              {run ? (
+                <EvalPanel report={run.eval} />
+              ) : (
+                <EmptyState>Eval report will appear after the run.</EmptyState>
+              )}
             </TabsContent>
 
             {/* Debug */}
             <TabsContent value="debug">
-              <JsonInspector data={run} />
+              {run ? (
+                <JsonInspector data={run} />
+              ) : (
+                <EmptyState>Debug payload will appear after a workflow run.</EmptyState>
+              )}
             </TabsContent>
           </Tabs>
         </div>
