@@ -8,7 +8,7 @@ Agent Workflow Lab tests AI agent workflows against a realistic seeded workplace
 
 ## What We Are Building
 
-This is a workflow testing lab for AI WorkOS teams.
+This is a workflow testing lab project for AI WorkOS teams.
 
 A user enters a messy workplace request.
 
